@@ -1,45 +1,79 @@
 plugins {
-	java
-	id("org.springframework.boot") version "3.5.5"
-	id("io.spring.dependency-management") version "1.1.7"
+    java
+    id("org.springframework.boot") version "3.5.5"
+    id("io.spring.dependency-management") version "1.1.7"
+    jacoco
 }
 
 group = "com.kapil"
-version = "0.0.1-SNAPSHOT"
-description = "Comprehensive Data Science and Machine Learning platform"
+version = "0.0.1"
+description = "Verba Metrics GUI"
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
-}
-
-configurations {
-	compileOnly {
-		extendsFrom(configurations.annotationProcessor.get())
-	}
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
+}
+
+val apachePoiVersion = "5.4.0"
+val commonsIoVersion = "2.17.0"
+val commonsLang3Version = "3.18.0"
+val commonsCompressVersion = "1.27.1"
+
+// ML/DS Dependencies Versions
+val wekaVersion = "3.8.6"
+val smileVersion = "3.0.1"
+val dl4jVersion = "1.0.0-M2"
+val nd4jVersion = "1.0.0-M2"
+val opennlpVersion = "2.3.0"
+val jfreechartVersion = "1.5.3"
+val apacheCommonsMathVersion = "3.6.1"
+
+configurations.compileOnly {
+    extendsFrom(configurations.annotationProcessor.get())
 }
 
 dependencies {
 
-	implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
+    implementation("org.apache.poi:poi:$apachePoiVersion")
+    implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation("org.projectlombok:lombok:1.18.32")
+    implementation("commons-io:commons-io:$commonsIoVersion")
+    implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
+    implementation("org.apache.commons:commons-compress:$commonsCompressVersion")
+
+    // Machine Learning and Data Science Dependencies
+    implementation("org.jfree:jfreechart:$jfreechartVersion")
+    implementation("org.nd4j:nd4j-native-platform:$nd4jVersion")
+    implementation("com.github.haifengl:smile-core:$smileVersion")
+    implementation("nz.ac.waikato.cms.weka:weka-stable:$wekaVersion")
+    implementation("org.apache.opennlp:opennlp-tools:$opennlpVersion")
+    implementation("org.deeplearning4j:deeplearning4j-core:$dl4jVersion")
+    implementation("org.apache.commons:commons-math3:$apacheCommonsMathVersion")
+
+    annotationProcessor("org.projectlombok:lombok:1.18.32")
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+	
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	
+    testImplementation("org.projectlombok:lombok:1.18.32")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 
 }
 
-tasks.withType<Test> {
-	useJUnitPlatform()
+tasks.test {
+    useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
 }
 
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
+jacoco {
+    toolVersion = "0.8.12"
 }
