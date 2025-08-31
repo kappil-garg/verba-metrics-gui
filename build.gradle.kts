@@ -59,6 +59,9 @@ dependencies {
     implementation("org.deeplearning4j:deeplearning4j-core:$dl4jVersion")
     implementation("org.apache.commons:commons-math3:$apacheCommonsMathVersion")
 
+    implementation("org.slf4j:slf4j-api")
+    implementation("ch.qos.logback:logback-classic")
+
     annotationProcessor("org.projectlombok:lombok:1.18.32")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 	
