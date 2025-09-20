@@ -10,4 +10,9 @@ class VerbaMetricsGuiApplicationTests {
 	void contextLoads() {
 	}
 
+    @Test
+    void mainMethodRuns() {
+        VerbaMetricsGuiApplication.main(new String[]{});
+    }
+
 }
