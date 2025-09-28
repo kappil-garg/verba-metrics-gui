@@ -43,6 +43,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+    implementation("com.h2database:h2")    
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
     implementation("org.apache.poi:poi:$apachePoiVersion")
     implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
 
