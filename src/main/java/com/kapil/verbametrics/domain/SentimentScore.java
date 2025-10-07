@@ -1,6 +1,6 @@
 package com.kapil.verbametrics.domain;
 
-import com.kapil.verbametrics.constants.SentimentConstants;
+import com.kapil.verbametrics.util.VerbaMetricsConstants;
 
 /**
  * Domain record representing sentiment analysis results.
@@ -12,11 +12,11 @@ public record SentimentScore(
         double confidence,
         double score
 ) {
-    
+
     public SentimentScore {
         validateInputs(label, confidence, score);
     }
-    
+
     /**
      * Validates the input parameters to ensure they are valid.
      *
@@ -36,49 +36,40 @@ public record SentimentScore(
             throw new IllegalArgumentException("Score must be between -1.0 and 1.0");
         }
     }
-    
+
     /**
      * Determines the confidence level based on the confidence value.
      *
      * @return the confidence level as a string
      */
     public String getConfidenceLevel() {
-        if (confidence >= SentimentConstants.HIGH_CONFIDENCE) {
-            return "HIGH";
-        } else if (confidence >= SentimentConstants.MEDIUM_CONFIDENCE) {
-            return "MEDIUM";
+        if (confidence >= VerbaMetricsConstants.HIGH_CONFIDENCE) {
+            return VerbaMetricsConstants.K_HIGH;
+        } else if (confidence >= VerbaMetricsConstants.MEDIUM_CONFIDENCE) {
+            return VerbaMetricsConstants.K_MEDIUM;
         } else {
-            return "LOW";
+            return VerbaMetricsConstants.K_LOW;
         }
     }
-    
+
     /**
      * Checks if the sentiment is positive.
      *
      * @return true if the sentiment is positive
      */
     public boolean isPositive() {
-        return SentimentConstants.POSITIVE.equals(label);
+        return VerbaMetricsConstants.POSITIVE.equals(label);
     }
-    
+
     /**
      * Checks if the sentiment is negative.
      *
      * @return true if the sentiment is negative
      */
     public boolean isNegative() {
-        return SentimentConstants.NEGATIVE.equals(label);
+        return VerbaMetricsConstants.NEGATIVE.equals(label);
     }
-    
-    /**
-     * Checks if the sentiment is neutral.
-     *
-     * @return true if the sentiment is neutral
-     */
-    public boolean isNeutral() {
-        return SentimentConstants.NEUTRAL.equals(label);
-    }
-    
+
     @Override
     public String toString() {
         return """
@@ -89,5 +80,5 @@ public record SentimentScore(
                 label, confidence, score, getConfidenceLevel()
         );
     }
-    
+
 }

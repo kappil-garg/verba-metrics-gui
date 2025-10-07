@@ -29,14 +29,24 @@ public record BasicTextStatistics(
      */
     private static void validateInputs(int wordCount, int sentenceCount, int characterCount,
                                        int characterCountNoSpaces, int paragraphCount) {
-        if (wordCount < 0) throw new IllegalArgumentException("Word count cannot be negative");
-        if (sentenceCount < 0) throw new IllegalArgumentException("Sentence count cannot be negative");
-        if (characterCount < 0) throw new IllegalArgumentException("Character count cannot be negative");
-        if (characterCountNoSpaces < 0)
+        if (wordCount < 0) {
+            throw new IllegalArgumentException("Word count cannot be negative");
+        }
+        if (sentenceCount < 0) {
+            throw new IllegalArgumentException("Sentence count cannot be negative");
+        }
+        if (characterCount < 0) {
+            throw new IllegalArgumentException("Character count cannot be negative");
+        }
+        if (characterCountNoSpaces < 0) {
             throw new IllegalArgumentException("Character count without spaces cannot be negative");
-        if (paragraphCount < 0) throw new IllegalArgumentException("Paragraph count cannot be negative");
-        if (characterCountNoSpaces > characterCount)
+        }
+        if (paragraphCount < 0) {
+            throw new IllegalArgumentException("Paragraph count cannot be negative");
+        }
+        if (characterCountNoSpaces > characterCount) {
             throw new IllegalArgumentException("Character count without spaces cannot exceed total character count");
+        }
     }
 
     @Override

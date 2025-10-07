@@ -43,62 +43,6 @@ public record ReadabilityMetrics(
         }
     }
 
-    /**
-     * Determines the reading level description based on Flesch-Kincaid score.
-     *
-     * @return the reading level description
-     */
-    public String getReadingLevelDescription() {
-        if (fleschKincaidScore <= 6) {
-            return "Elementary";
-        } else if (fleschKincaidScore <= 9) {
-            return "Middle School";
-        } else if (fleschKincaidScore <= 12) {
-            return "High School";
-        } else if (fleschKincaidScore <= 16) {
-            return "College";
-        } else {
-            return "Graduate";
-        }
-    }
-
-    /**
-     * Determines the complexity level based on Flesch Reading Ease score.
-     *
-     * @return the complexity level
-     */
-    public String getComplexityLevel() {
-        if (fleschReadingEase >= 80) {
-            return "Very Easy";
-        } else if (fleschReadingEase >= 60) {
-            return "Easy";
-        } else if (fleschReadingEase >= 40) {
-            return "Moderate";
-        } else if (fleschReadingEase >= 20) {
-            return "Difficult";
-        } else {
-            return "Very Difficult";
-        }
-    }
-
-    /**
-     * Checks if the text is easy to read.
-     *
-     * @return true if the text is easy to read
-     */
-    public boolean isEasyToRead() {
-        return fleschReadingEase >= 60;
-    }
-
-    /**
-     * Checks if the text is difficult to read.
-     *
-     * @return true if the text is difficult to read
-     */
-    public boolean isDifficultToRead() {
-        return fleschReadingEase < 40;
-    }
-
     @Override
     public String toString() {
         return """
