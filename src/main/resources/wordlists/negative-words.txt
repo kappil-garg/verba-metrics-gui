@@ -132,7 +132,6 @@ weird
 odd
 bizarre
 peculiar
-strange
 foreign
 alien
 unknown
@@ -219,7 +218,6 @@ conflicting
 fighting
 battling
 struggling
-competing
 competing
 rivaling
 challenging

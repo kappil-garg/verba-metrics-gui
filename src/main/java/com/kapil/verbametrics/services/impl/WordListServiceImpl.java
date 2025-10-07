@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * Implementation of WordListService for managing word lists used in text analysis.
@@ -115,10 +117,10 @@ public class WordListServiceImpl implements WordListService {
      * @return a set of processed words
      */
     private java.util.Set<String> toProcessedSet(java.util.List<String> words, boolean caseInsensitive) {
-        java.util.function.Function<String, String> normalizer = caseInsensitive
+        Function<String, String> normalizer = caseInsensitive
                 ? s -> s.toLowerCase(java.util.Locale.ROOT)
                 : s -> s;
-        java.util.Set<String> result = java.util.concurrent.ConcurrentHashMap.newKeySet();
+        Set<String> result = ConcurrentHashMap.newKeySet();
         words.stream()
                 .filter(w -> w != null && !w.isBlank())
                 .map(String::trim)

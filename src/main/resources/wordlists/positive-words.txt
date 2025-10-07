@@ -53,7 +53,6 @@ exceptional
 superb
 terrific
 fabulous
-wonderful
 delightful
 charming
 lovely
@@ -120,8 +119,6 @@ original
 unique
 special
 rare
-precious
-valuable
 worthwhile
 beneficial
 advantageous
@@ -129,7 +126,6 @@ profitable
 productive
 efficient
 effective
-successful
 triumphant
 victorious
 conquering
@@ -151,10 +147,6 @@ curing
 recovering
 restoring
 renewing
-refreshing
-revitalizing
-regenerating
-rejuvenating
 renewing
 refreshing
 revitalizing
