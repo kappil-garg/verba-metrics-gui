@@ -1,8 +1,8 @@
 package com.kapil.verbametrics.ml.services;
 
 import com.kapil.verbametrics.ml.domain.MLModel;
-import com.kapil.verbametrics.ml.domain.ModelTrainingResult;
 import com.kapil.verbametrics.ml.domain.ModelEvaluationResult;
+import com.kapil.verbametrics.ml.domain.ModelTrainingResult;
 
 import java.util.List;
 import java.util.Map;

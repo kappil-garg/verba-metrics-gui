@@ -41,4 +41,15 @@ public final class VerbaMetricsConstants {
     public static final String PARAGRAPH_REGEX = "\\n\\s*\\n";
     public static final String SENTENCE_ENDINGS_REGEX = "[.!?]+";
 
+    // ML Constants
+    public static final String K_UNKNOWN = "UNKNOWN";
+    public static final String K_SENTIMENT = "SENTIMENT";
+    public static final String K_TOPIC_MODELING = "TOPIC_MODELING";
+    public static final String K_CLASSIFICATION = "CLASSIFICATION";
+
+    public static final String K_EXCELLENT = "EXCELLENT";
+    public static final String K_GOOD = "GOOD";
+    public static final String K_FAIR = "FAIR";
+    public static final String K_POOR = "POOR";
+    public static final String K_VERY_POOR = "VERY_POOR";
 }
