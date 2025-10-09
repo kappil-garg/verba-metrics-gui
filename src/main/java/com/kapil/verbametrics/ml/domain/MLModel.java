@@ -27,40 +27,12 @@ public record MLModel(
 ) {
 
     public MLModel {
-        validateInputs(modelId, modelType, name, version, accuracy, status);
-    }
-
-    /**
-     * Validates the input parameters to ensure they are valid.
-     *
-     * @param modelId   the model ID
-     * @param modelType the model type
-     * @param name      the model name
-     * @param version   the model version
-     * @param accuracy  the model accuracy
-     * @param status    the model status
-     * @throws IllegalArgumentException if any parameter is invalid
-     */
-    private static void validateInputs(String modelId, String modelType, String name,
-                                       String version, double accuracy, String status) {
-        if (modelId == null || modelId.isBlank()) {
-            throw new IllegalArgumentException("Model ID cannot be null or blank");
-        }
-        if (modelType == null || modelType.isBlank()) {
-            throw new IllegalArgumentException("Model type cannot be null or blank");
-        }
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Model name cannot be null or blank");
-        }
-        if (version == null || version.isBlank()) {
-            throw new IllegalArgumentException("Model version cannot be null or blank");
-        }
-        if (accuracy < 0.0 || accuracy > 1.0) {
-            throw new IllegalArgumentException("Accuracy must be between 0.0 and 1.0");
-        }
-        if (status == null || status.isBlank()) {
-            throw new IllegalArgumentException("Model status cannot be null or blank");
-        }
+        BaseMLResult.validateModelId(modelId);
+        BaseMLResult.validateModelType(modelType);
+        BaseMLResult.validateStringField(name, "Model name");
+        BaseMLResult.validateStringField(version, "Model version");
+        BaseMLResult.validateScore(accuracy, "Accuracy");
+        BaseMLResult.validateStringField(status, "Model status");
     }
 
     /**
@@ -78,11 +50,7 @@ public record MLModel(
      * @return the performance level
      */
     public String getPerformanceLevel() {
-        if (accuracy >= 0.9) return "EXCELLENT";
-        if (accuracy >= 0.8) return "GOOD";
-        if (accuracy >= 0.7) return "FAIR";
-        if (accuracy >= 0.6) return "POOR";
-        return "VERY_POOR";
+        return new BaseMLResult() {}.getPerformanceLevel(accuracy);
     }
 
     @Override

@@ -14,27 +14,9 @@ public record SentimentScore(
 ) {
 
     public SentimentScore {
-        validateInputs(label, confidence, score);
-    }
-
-    /**
-     * Validates the input parameters to ensure they are valid.
-     *
-     * @param label      the sentiment label
-     * @param confidence the confidence level
-     * @param score      the sentiment score
-     * @throws IllegalArgumentException if any parameter is invalid
-     */
-    private static void validateInputs(String label, double confidence, double score) {
-        if (label == null || label.isBlank()) {
-            throw new IllegalArgumentException("Sentiment label cannot be null or blank");
-        }
-        if (confidence < 0.0 || confidence > 1.0) {
-            throw new IllegalArgumentException("Confidence must be between 0.0 and 1.0");
-        }
-        if (score < -1.0 || score > 1.0) {
-            throw new IllegalArgumentException("Score must be between -1.0 and 1.0");
-        }
+        BaseDomainResult.validateStringField(label, "Sentiment label");
+        BaseDomainResult.validateRange(confidence, 0.0, 1.0, "Confidence");
+        BaseDomainResult.validateRange(score, -1.0, 1.0, "Score");
     }
 
     /**
@@ -43,13 +25,7 @@ public record SentimentScore(
      * @return the confidence level as a string
      */
     public String getConfidenceLevel() {
-        if (confidence >= VerbaMetricsConstants.HIGH_CONFIDENCE) {
-            return VerbaMetricsConstants.K_HIGH;
-        } else if (confidence >= VerbaMetricsConstants.MEDIUM_CONFIDENCE) {
-            return VerbaMetricsConstants.K_MEDIUM;
-        } else {
-            return VerbaMetricsConstants.K_LOW;
-        }
+        return new BaseDomainResult() {}.getConfidenceLevel(confidence);
     }
 
     /**

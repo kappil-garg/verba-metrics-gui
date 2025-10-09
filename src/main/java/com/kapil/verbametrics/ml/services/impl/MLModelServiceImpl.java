@@ -3,6 +3,8 @@ package com.kapil.verbametrics.ml.services.impl;
 import com.kapil.verbametrics.ml.domain.MLModel;
 import com.kapil.verbametrics.ml.domain.ModelEvaluationResult;
 import com.kapil.verbametrics.ml.domain.ModelTrainingResult;
+import com.kapil.verbametrics.ml.engines.ModelEvaluationEngine;
+import com.kapil.verbametrics.ml.engines.ModelPredictionEngine;
 import com.kapil.verbametrics.ml.entities.MLModelEntity;
 import com.kapil.verbametrics.ml.mapper.MLModelMapper;
 import com.kapil.verbametrics.ml.repository.MLModelRepository;
@@ -15,7 +17,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -33,26 +38,29 @@ public class MLModelServiceImpl implements MLModelService {
     private final MLModelMapper modelMapper;
     private final MLModelRepository modelRepository;
     private final ModelTrainingService trainingService;
+    private final ModelEvaluationEngine evaluationEngine;
+    private final ModelPredictionEngine predictionEngine;
 
     @Autowired
     public MLModelServiceImpl(MLModelRepository modelRepository,
                               MLModelMapper modelMapper,
-                              ModelTrainingService trainingService) {
+                              ModelTrainingService trainingService,
+                              ModelEvaluationEngine evaluationEngine,
+                              ModelPredictionEngine predictionEngine) {
         this.modelRepository = modelRepository;
         this.modelMapper = modelMapper;
         this.trainingService = trainingService;
+        this.evaluationEngine = evaluationEngine;
+        this.predictionEngine = predictionEngine;
     }
 
     @Override
     public ModelTrainingResult trainModel(String modelType, List<Map<String, Object>> trainingData,
                                           Map<String, Object> parameters) {
-
         Objects.requireNonNull(modelType, "Model type cannot be null");
         Objects.requireNonNull(trainingData, "Training data cannot be null");
         Objects.requireNonNull(parameters, "Parameters cannot be null");
-
         LOGGER.debug("Starting model training for type: {} with {} data points", modelType, trainingData.size());
-
         try {
             ModelTrainingResult result = trainingService.trainModel(modelType, trainingData, parameters);
             MLModel model = createMLModelFromResult(result, modelType, parameters);
@@ -64,17 +72,13 @@ public class MLModelServiceImpl implements MLModelService {
             LOGGER.error("Failed to train model", e);
             throw new RuntimeException("Model training failed: " + e.getMessage(), e);
         }
-
     }
 
     @Override
     public ModelEvaluationResult evaluateModel(String modelId, List<Map<String, Object>> testData) {
-
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(testData, "Test data cannot be null");
-
         LOGGER.debug("Starting model evaluation for model: {} with {} test points", modelId, testData.size());
-
         try {
             if (!modelRepository.existsById(modelId)) {
                 throw new IllegalArgumentException("Model not found: " + modelId);
@@ -82,39 +86,28 @@ public class MLModelServiceImpl implements MLModelService {
             if (testData.isEmpty()) {
                 throw new IllegalArgumentException("Test data cannot be empty");
             }
-            long startTime = System.currentTimeMillis();
-            ModelEvaluationResult result = performModelEvaluation(modelId, testData);
-            long evaluationTime = System.currentTimeMillis() - startTime;
-            LOGGER.debug("Model evaluation completed in {}ms for model: {}", evaluationTime, modelId);
-            return result;
+            return evaluationEngine.evaluateModel(modelId, testData);
         } catch (Exception e) {
             LOGGER.error("Failed to evaluate model", e);
             throw new RuntimeException("Model evaluation failed: " + e.getMessage(), e);
         }
-
     }
 
     @Override
     public Map<String, Object> predict(String modelId, Map<String, Object> input) {
-
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(input, "Input cannot be null");
-
         LOGGER.debug("Making prediction with model: {}", modelId);
-
         try {
             MLModel model = getModel(modelId);
             if (!model.isReadyForUse()) {
                 throw new IllegalStateException("Model is not ready for use: " + modelId);
             }
-            Map<String, Object> prediction = performPrediction(modelId, model);
-            LOGGER.debug("Prediction completed for model: {}", modelId);
-            return prediction;
+            return predictionEngine.predict(modelId, input);
         } catch (Exception e) {
             LOGGER.error("Failed to make prediction", e);
             throw new RuntimeException("Prediction failed: " + e.getMessage(), e);
         }
-
     }
 
     @Override
@@ -164,15 +157,11 @@ public class MLModelServiceImpl implements MLModelService {
 
     @Override
     public MLModel updateModel(String modelId, Map<String, Object> updates) {
-
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(updates, "Updates cannot be null");
-
         LOGGER.debug("Updating model: {}", modelId);
-
         MLModelEntity entity = modelRepository.findById(modelId)
                 .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
-
         if (updates.containsKey("name")) {
             entity.setName((String) updates.get("name"));
         }
@@ -185,12 +174,9 @@ public class MLModelServiceImpl implements MLModelService {
         if (updates.containsKey("status")) {
             entity.setStatus((String) updates.get("status"));
         }
-
         MLModelEntity savedEntity = modelRepository.save(entity);
         LOGGER.debug("Model updated successfully: {}", modelId);
-
         return modelMapper.toDomain(savedEntity);
-
     }
 
     @Override
@@ -210,33 +196,6 @@ public class MLModelServiceImpl implements MLModelService {
         return statistics;
     }
 
-    /**
-     * Performs the actual model training using a real ML library.
-     * Replace this stub with integration to DL4J, Smile, Weka, or your ML backend.
-     */
-    private ModelTrainingResult performModelTraining(String modelId, String modelType,
-                                                     List<Map<String, Object>> trainingData) {
-        // TODO: Integrate with real ML training logic (e.g., DL4J, Smile, Weka, etc.)
-        throw new UnsupportedOperationException("Model training must be implemented with a real ML library.");
-    }
-
-    /**
-     * Performs the actual model evaluation using a real ML library.
-     * Replace this stub with integration to DL4J, Smile, Weka, or your ML backend.
-     */
-    private ModelEvaluationResult performModelEvaluation(String modelId, List<Map<String, Object>> testData) {
-        // TODO: Integrate with real ML evaluation logic (e.g., DL4J, Smile, Weka, etc.)
-        throw new UnsupportedOperationException("Model evaluation must be implemented with a real ML library.");
-    }
-
-    /**
-     * Performs the actual prediction using a real ML library.
-     * Replace this stub with integration to DL4J, Smile, Weka, or your ML backend.
-     */
-    private Map<String, Object> performPrediction(String modelId, MLModel model) {
-        // TODO: Integrate with real ML prediction logic (e.g., DL4J, Smile, Weka, etc.)
-        throw new UnsupportedOperationException("Prediction must be implemented with a real ML library.");
-    }
 
     /**
      * Creates an ML model from training result.
