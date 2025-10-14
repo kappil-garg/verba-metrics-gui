@@ -12,7 +12,7 @@ import java.util.Map;
  * @author Kapil Garg
  */
 public interface ModelTrainingService {
-    
+
     /**
      * Trains a machine learning model with the provided dataset.
      *
@@ -21,9 +21,9 @@ public interface ModelTrainingService {
      * @param parameters   Model-specific parameters
      * @return Training result with model performance metrics
      */
-    ModelTrainingResult trainModel(String modelType, List<Map<String, Object>> trainingData, 
+    ModelTrainingResult trainModel(String modelType, List<Map<String, Object>> trainingData,
                                    Map<String, Object> parameters);
-    
+
     /**
      * Validates training data before training.
      *
@@ -32,14 +32,14 @@ public interface ModelTrainingService {
      * @return true if data is valid for training
      */
     boolean validateTrainingData(List<Map<String, Object>> trainingData, String modelType);
-    
+
     /**
      * Gets supported model types.
      *
      * @return List of supported model types
      */
     List<String> getSupportedModelTypes();
-    
+
     /**
      * Gets default parameters for a model type.
      *
@@ -47,5 +47,5 @@ public interface ModelTrainingService {
      * @return Default parameters for the model type
      */
     Map<String, Object> getDefaultParameters(String modelType);
-    
+
 }

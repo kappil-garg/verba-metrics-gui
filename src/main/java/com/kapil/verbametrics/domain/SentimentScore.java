@@ -25,7 +25,8 @@ public record SentimentScore(
      * @return the confidence level as a string
      */
     public String getConfidenceLevel() {
-        return new BaseDomainResult() {}.getConfidenceLevel(confidence);
+        return new BaseDomainResult() {
+        }.getConfidenceLevel(confidence);
     }
 
     /**

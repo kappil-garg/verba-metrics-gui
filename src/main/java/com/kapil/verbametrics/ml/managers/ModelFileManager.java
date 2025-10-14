@@ -1,13 +1,14 @@
 package com.kapil.verbametrics.ml.managers;
 
 import com.kapil.verbametrics.ml.config.MLModelProperties;
-import com.kapil.verbametrics.ml.domain.MLModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,21 +37,19 @@ public class ModelFileManager {
      *
      * @param modelId the model ID
      * @param model   the model to save
-     * @return the file path where the model was saved
      */
-    public String saveModelToFile(String modelId, MLModel model) {
+    public void saveModelToFile(String modelId, Object model) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(model, "Model cannot be null");
         try {
             String basePath = properties.getFileSettings().getOrDefault("base-path", "/models");
-            String format = properties.getFileSettings().getOrDefault("format", "json");
-            String fileName = modelId + "." + format;
+            String fileName = modelId + ".ser";
             Path filePath = Paths.get(basePath, fileName);
             Files.createDirectories(filePath.getParent());
-            // TODO: Implement actual model serialization
-            Files.write(filePath, ("Model: " + modelId).getBytes());
+            try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(filePath))) {
+                oos.writeObject(model);
+            }
             LOGGER.debug("Model saved to file: {}", filePath);
-            return filePath.toString();
         } catch (IOException e) {
             LOGGER.error("Failed to save model to file: {}", modelId, e);
             throw new RuntimeException("Failed to save model to file: " + e.getMessage(), e);
@@ -63,7 +62,7 @@ public class ModelFileManager {
      * @param modelId the model ID
      * @return the loaded model if found
      */
-    public Optional<MLModel> loadModelFromFile(String modelId) {
+    public Optional<Object> loadModelFromFile(String modelId) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         try {
             String filePath = getModelFilePath(modelId);
@@ -72,9 +71,11 @@ public class ModelFileManager {
                 LOGGER.debug("Model file not found: {}", filePath);
                 return Optional.empty();
             }
-            // TODO: Implement actual model deserialization
-            LOGGER.debug("Model file found: {}", filePath);
-            return Optional.empty();
+            try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(path))) {
+                Object model = ois.readObject();
+                LOGGER.debug("Model loaded from file: {}", filePath);
+                return Optional.of(model);
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to load model from file: {}", modelId, e);
             return Optional.empty();

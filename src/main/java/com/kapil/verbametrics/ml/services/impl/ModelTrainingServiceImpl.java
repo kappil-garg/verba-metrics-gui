@@ -41,8 +41,8 @@ public class ModelTrainingServiceImpl implements ModelTrainingService {
             if (!validateTrainingData(trainingData, modelType)) {
                 throw new IllegalArgumentException("Invalid training data for model type: " + modelType);
             }
-            // TODO: Implement ML training logic with real ML libraries (DL4J, Smile, Weka, etc.)
-            throw new UnsupportedOperationException("Model training not implemented yet");
+            String modelId = "model_" + System.currentTimeMillis();
+            return trainingEngine.trainModel(modelId, modelType, trainingData, parameters);
         } catch (Exception e) {
             LOGGER.error("Failed to train model", e);
             throw new RuntimeException("Model training failed: " + e.getMessage(), e);

@@ -14,7 +14,7 @@ import java.util.Map;
  * @author Kapil Garg
  */
 public interface MLModelService {
-    
+
     /**
      * Trains a machine learning model with the provided dataset.
      *
@@ -23,9 +23,9 @@ public interface MLModelService {
      * @param parameters   Model-specific parameters
      * @return Training result with model performance metrics
      */
-    ModelTrainingResult trainModel(String modelType, List<Map<String, Object>> trainingData, 
+    ModelTrainingResult trainModel(String modelType, List<Map<String, Object>> trainingData,
                                    Map<String, Object> parameters);
-    
+
     /**
      * Evaluates a trained model using test data.
      *
@@ -34,7 +34,7 @@ public interface MLModelService {
      * @return Evaluation result with performance metrics
      */
     ModelEvaluationResult evaluateModel(String modelId, List<Map<String, Object>> testData);
-    
+
     /**
      * Makes predictions using a trained model.
      *
@@ -43,7 +43,7 @@ public interface MLModelService {
      * @return Prediction result with confidence scores
      */
     Map<String, Object> predict(String modelId, Map<String, Object> input);
-    
+
     /**
      * Gets information about a trained model.
      *
@@ -51,14 +51,14 @@ public interface MLModelService {
      * @return Model information
      */
     MLModel getModel(String modelId);
-    
+
     /**
      * Lists all available trained models.
      *
      * @return List of model information
      */
     List<MLModel> listModels();
-    
+
     /**
      * Lists models by type.
      *
@@ -66,14 +66,14 @@ public interface MLModelService {
      * @return List of models of the specified type
      */
     List<MLModel> listModelsByType(String modelType);
-    
+
     /**
      * Lists active models only.
      *
      * @return List of active models
      */
     List<MLModel> listActiveModels();
-    
+
     /**
      * Deletes a trained model.
      *
@@ -81,7 +81,7 @@ public interface MLModelService {
      * @return true if deletion was successful
      */
     boolean deleteModel(String modelId);
-    
+
     /**
      * Updates model metadata.
      *
@@ -90,7 +90,7 @@ public interface MLModelService {
      * @return Updated model information
      */
     MLModel updateModel(String modelId, Map<String, Object> updates);
-    
+
     /**
      * Gets model performance statistics.
      *
@@ -98,5 +98,5 @@ public interface MLModelService {
      * @return Performance statistics
      */
     Map<String, Object> getModelStatistics(String modelId);
-    
+
 }
