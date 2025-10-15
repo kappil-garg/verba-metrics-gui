@@ -2,18 +2,17 @@ package com.kapil.verbametrics.ml.engines;
 
 import com.kapil.verbametrics.ml.domain.ModelEvaluationResult;
 import com.kapil.verbametrics.ml.managers.ModelFileManager;
+import com.kapil.verbametrics.ml.utils.MetricsCalculationUtils;
+import com.kapil.verbametrics.ml.utils.WekaDatasetUtils;
 import com.kapil.verbametrics.util.TypeSafeCastUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import weka.classifiers.Classifier;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.Instances;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -119,7 +118,7 @@ public class ModelEvaluationEngine {
         double accuracy = evaluation.pctCorrect() / 100.0;
         double precision = evaluation.precision(0);
         double recall = evaluation.recall(0);
-        double f1Score = 2.0 * (precision * recall) / (precision + recall);
+        double f1Score = MetricsCalculationUtils.calculateF1Score(precision, recall);
         double auc = evaluation.areaUnderROC(0);
         double[][] confusionMatrix = evaluation.confusionMatrix();
         Map<String, Object> confusionMap = Map.of(
@@ -150,18 +149,7 @@ public class ModelEvaluationEngine {
      * @return Weka Instances object
      */
     private Instances createWekaDataset(List<Map<String, Object>> testData) {
-        ArrayList<Attribute> attributes = new ArrayList<>();
-        attributes.add(new Attribute("text", (ArrayList<String>) null));
-        attributes.add(new Attribute("label"));
-        Instances dataset = new Instances("TestDataset", attributes, testData.size());
-        dataset.setClassIndex(1);
-        for (Map<String, Object> data : testData) {
-            DenseInstance instance = new DenseInstance(2);
-            instance.setValue(0, (String) data.get("text"));
-            instance.setValue(1, (Integer) data.getOrDefault("label", 0));
-            dataset.add(instance);
-        }
-        return dataset;
+        return WekaDatasetUtils.createDataset(testData, "TestDataset");
     }
 
 

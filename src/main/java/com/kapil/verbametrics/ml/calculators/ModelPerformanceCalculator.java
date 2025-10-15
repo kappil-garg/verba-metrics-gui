@@ -3,6 +3,7 @@ package com.kapil.verbametrics.ml.calculators;
 import com.kapil.verbametrics.ml.config.MLModelProperties;
 import com.kapil.verbametrics.ml.domain.ModelEvaluationResult;
 import com.kapil.verbametrics.ml.domain.ModelTrainingResult;
+import com.kapil.verbametrics.ml.utils.MetricsCalculationUtils;
 import com.kapil.verbametrics.util.VerbaMetricsConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -38,11 +39,11 @@ public class ModelPerformanceCalculator {
         metrics.put("precision", trainingResult.precision());
         metrics.put("recall", trainingResult.recall());
         metrics.put("f1Score", trainingResult.f1Score());
-        metrics.put("qualityScore", calculateQualityScore(
+        metrics.put("qualityScore", MetricsCalculationUtils.calculateQualityScore(
                 trainingResult.accuracy(), trainingResult.precision(),
                 trainingResult.recall(), trainingResult.f1Score()));
         metrics.put("performanceLevel", calculatePerformanceLevel(
-                calculateQualityScore(trainingResult.accuracy(), trainingResult.precision(),
+                MetricsCalculationUtils.calculateQualityScore(trainingResult.accuracy(), trainingResult.precision(),
                         trainingResult.recall(), trainingResult.f1Score())));
         metrics.put("trainingTimeMs", trainingResult.trainingTimeMs());
         metrics.put("trainingDataSize", trainingResult.trainingDataSize());
@@ -61,29 +62,17 @@ public class ModelPerformanceCalculator {
         metrics.put("precision", evaluationResult.precision());
         metrics.put("recall", evaluationResult.recall());
         metrics.put("f1Score", evaluationResult.f1Score());
-        metrics.put("qualityScore", calculateQualityScore(
+        metrics.put("qualityScore", MetricsCalculationUtils.calculateQualityScore(
                 evaluationResult.accuracy(), evaluationResult.precision(),
                 evaluationResult.recall(), evaluationResult.f1Score()));
         metrics.put("performanceLevel", calculatePerformanceLevel(
-                calculateQualityScore(evaluationResult.accuracy(), evaluationResult.precision(),
+                MetricsCalculationUtils.calculateQualityScore(evaluationResult.accuracy(), evaluationResult.precision(),
                         evaluationResult.recall(), evaluationResult.f1Score())));
         metrics.put("evaluationTimeMs", evaluationResult.evaluationTimeMs());
         metrics.put("testDataSize", evaluationResult.testDataSize());
         return metrics;
     }
 
-    /**
-     * Calculates overall model quality score.
-     *
-     * @param accuracy  the accuracy score
-     * @param precision the precision score
-     * @param recall    the recall score
-     * @param f1Score   the F1 score
-     * @return overall quality score
-     */
-    public double calculateQualityScore(double accuracy, double precision, double recall, double f1Score) {
-        return (accuracy + precision + recall + f1Score) / 4.0;
-    }
 
     /**
      * Calculates model performance level based on metrics.

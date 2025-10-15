@@ -1,16 +1,14 @@
 package com.kapil.verbametrics.ml.engines;
 
 import com.kapil.verbametrics.ml.managers.ModelFileManager;
+import com.kapil.verbametrics.ml.utils.WekaDatasetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import weka.classifiers.Classifier;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
 import weka.core.Instances;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -105,16 +103,7 @@ public class ModelPredictionEngine {
      * @return Weka Instances object
      */
     private Instances createWekaInstance(Map<String, Object> input) {
-        ArrayList<Attribute> attributes = new ArrayList<>();
-        attributes.add(new Attribute("text", (ArrayList<String>) null));
-        attributes.add(new Attribute("label"));
-        Instances dataset = new Instances("PredictionDataset", attributes, 1);
-        dataset.setClassIndex(1);
-        DenseInstance instance = new DenseInstance(2);
-        instance.setValue(0, (String) input.get("text"));
-        instance.setValue(1, 0);
-        dataset.add(instance);
-        return dataset;
+        return WekaDatasetUtils.createSingleInstanceDataset(input, "PredictionDataset");
     }
 
 }
