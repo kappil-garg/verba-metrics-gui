@@ -34,6 +34,7 @@ public final class VerbaMetricsConstants {
     public static final String K_HIGH = "HIGH";
     public static final String K_MEDIUM = "MEDIUM";
     public static final String K_LOW = "LOW";
+
     public static final double HIGH_CONFIDENCE = 0.8;
     public static final double MEDIUM_CONFIDENCE = 0.6;
 
@@ -52,4 +53,5 @@ public final class VerbaMetricsConstants {
     public static final String K_FAIR = "FAIR";
     public static final String K_POOR = "POOR";
     public static final String K_VERY_POOR = "VERY_POOR";
+
 }

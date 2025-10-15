@@ -39,7 +39,8 @@ public record ModelTrainingResult(
      * @return the quality score between 0.0 and 1.0
      */
     public double getQualityScore() {
-        return new BaseMLResult() {}.calculateAverageScore(accuracy, precision, recall, f1Score);
+        return new BaseMLResult() {
+        }.calculateAverageScore(accuracy, precision, recall, f1Score);
     }
 
     /**
@@ -48,7 +49,8 @@ public record ModelTrainingResult(
      * @return the performance level
      */
     public String getPerformanceLevel() {
-        return new BaseMLResult() {}.getPerformanceLevel(getQualityScore());
+        return new BaseMLResult() {
+        }.getPerformanceLevel(getQualityScore());
     }
 
     @Override

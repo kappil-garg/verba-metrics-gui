@@ -43,7 +43,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
-    implementation("com.h2database:h2")    
+    implementation("com.h2database:h2")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
     implementation("org.apache.poi:poi:$apachePoiVersion")
@@ -68,10 +68,12 @@ dependencies {
 
     annotationProcessor("org.projectlombok:lombok:1.18.32")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-	
+
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	
+
+    testImplementation("org.mockito:mockito-core:5.8.0")
     testImplementation("org.projectlombok:lombok:1.18.32")
+    testImplementation("net.bytebuddy:byte-buddy-agent:1.14.11")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
 }
@@ -79,6 +81,13 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
     finalizedBy(tasks.jacocoTestReport)
+    jvmArgs = listOf(
+        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+        "--add-opens", "java.base/java.util=ALL-UNNAMED",
+        "--add-opens", "java.base/java.lang.reflect=ALL-UNNAMED",
+        "--add-opens", "java.base/java.text=ALL-UNNAMED",
+        "--add-opens", "java.desktop/java.awt.font=ALL-UNNAMED"
+    )
 }
 
 jacoco {

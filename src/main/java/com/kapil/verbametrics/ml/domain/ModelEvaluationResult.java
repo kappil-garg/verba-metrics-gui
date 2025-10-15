@@ -41,7 +41,8 @@ public record ModelEvaluationResult(
      * @return the evaluation score between 0.0 and 1.0
      */
     public double getEvaluationScore() {
-        return new BaseMLResult() {}.calculateAverageScore(accuracy, precision, recall, f1Score, auc);
+        return new BaseMLResult() {
+        }.calculateAverageScore(accuracy, precision, recall, f1Score, auc);
     }
 
     /**
@@ -50,7 +51,8 @@ public record ModelEvaluationResult(
      * @return the performance level
      */
     public String getPerformanceLevel() {
-        return new BaseMLResult() {}.getPerformanceLevel(getEvaluationScore());
+        return new BaseMLResult() {
+        }.getPerformanceLevel(getEvaluationScore());
     }
 
     /**

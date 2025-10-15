@@ -50,7 +50,8 @@ public record MLModel(
      * @return the performance level
      */
     public String getPerformanceLevel() {
-        return new BaseMLResult() {}.getPerformanceLevel(accuracy);
+        return new BaseMLResult() {
+        }.getPerformanceLevel(accuracy);
     }
 
     @Override

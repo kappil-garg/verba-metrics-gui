@@ -1,10 +1,15 @@
 package com.kapil.verbametrics.ml.engines;
 
+import com.kapil.verbametrics.ml.managers.ModelFileManager;
+import com.kapil.verbametrics.ml.utils.WekaDatasetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import weka.classifiers.Classifier;
+import weka.core.Instances;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -19,9 +24,11 @@ public class ModelPredictionEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelPredictionEngine.class);
 
-    @Autowired
-    public ModelPredictionEngine() {
+    private final ModelFileManager fileManager;
 
+    @Autowired
+    public ModelPredictionEngine(ModelFileManager fileManager) {
+        this.fileManager = fileManager;
     }
 
     /**
@@ -35,8 +42,68 @@ public class ModelPredictionEngine {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(input, "Input cannot be null");
         LOGGER.debug("Making prediction with model: {}", modelId);
-        // TODO: Implement ML prediction logic with real ML libraries (DL4J, Smile, Weka, etc.)
-        throw new UnsupportedOperationException("Model prediction not implemented yet");
+        try {
+            Object model = fileManager.loadModelFromFile(modelId)
+                    .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
+            Map<String, Object> prediction = performPrediction(model, input);
+            LOGGER.debug("Prediction completed for model: {}", modelId);
+            return prediction;
+        } catch (Exception e) {
+            LOGGER.error("Failed to make prediction with model: {}", modelId, e);
+            Map<String, Object> errorResult = new HashMap<>();
+            errorResult.put("error", true);
+            errorResult.put("message", "Prediction failed: " + e.getMessage());
+            errorResult.put("modelId", modelId);
+            return errorResult;
+        }
+    }
+
+    /**
+     * Performs prediction based on the model type.
+     *
+     * @param model The trained model
+     * @param input The input data for prediction
+     * @return Prediction result with confidence scores
+     * @throws Exception if prediction fails
+     */
+    private Map<String, Object> performPrediction(Object model, Map<String, Object> input) throws Exception {
+        if (model instanceof Classifier) {
+            return predictWithWekaModel((Classifier) model, input);
+        } else {
+            throw new IllegalArgumentException("Unsupported model type: " + model.getClass().getSimpleName());
+        }
+    }
+
+    /**
+     * Makes prediction using a Weka Classifier model based on input data.
+     *
+     * @param model the Weka Classifier model
+     * @param input the input data for prediction
+     * @return prediction result with confidence scores
+     * @throws Exception if prediction fails
+     */
+    private Map<String, Object> predictWithWekaModel(Classifier model, Map<String, Object> input) throws Exception {
+        Instances dataset = createWekaInstance(input);
+        weka.core.Instance instance = dataset.instance(0);
+        double prediction = model.classifyInstance(instance);
+        double[] distribution = model.distributionForInstance(instance);
+        Map<String, Object> result = new HashMap<>();
+        result.put("prediction", (int) prediction);
+        result.put("confidence", distribution[(int) prediction]);
+        result.put("probabilities", distribution);
+        result.put("modelType", model.getClass().getSimpleName());
+        result.put("timestamp", System.currentTimeMillis());
+        return result;
+    }
+
+    /**
+     * Creates a Weka Instances object from input data for prediction.
+     *
+     * @param input the input data
+     * @return Weka Instances object
+     */
+    private Instances createWekaInstance(Map<String, Object> input) {
+        return WekaDatasetUtils.createSingleInstanceDataset(input, "PredictionDataset");
     }
 
 }

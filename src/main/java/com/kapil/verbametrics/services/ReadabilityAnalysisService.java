@@ -8,7 +8,7 @@ import com.kapil.verbametrics.domain.ReadabilityMetrics;
  * @author Kapil Garg
  */
 public interface ReadabilityAnalysisService {
-    
+
     /**
      * Analyzes the readability of the given text.
      *
@@ -16,14 +16,14 @@ public interface ReadabilityAnalysisService {
      * @return ReadabilityMetrics containing readability analysis results
      */
     ReadabilityMetrics analyzeReadability(String text);
-    
+
     /**
      * Analyzes the readability of the given text with custom parameters.
      *
-     * @param text the text to analyze
+     * @param text              the text to analyze
      * @param includeComplexity whether to include complexity analysis
      * @return ReadabilityMetrics containing readability analysis results
      */
     ReadabilityMetrics analyzeReadability(String text, boolean includeComplexity);
-    
+
 }
