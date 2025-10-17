@@ -9,8 +9,9 @@ import java.util.Map;
 
 /**
  * Configuration properties for sentiment rule weights and dictionaries.
- * Provides configurable boosters/dampeners, contrastives, punctuation breaks,
- * multi-word phrases, and normalization alpha with safe defaults.
+ * Provides configurable boosters/dampeners, contrastives, punctuation breaks and phrases with weights.
+ *
+ * @author Kapil Garg
  */
 @Data
 @Configuration
@@ -54,10 +55,7 @@ public class SentimentRuleProperties {
             "not good", -0.8
     );
 
+    private int contrastiveWindow = 10;
     private double normalizationAlpha = 15.0;
 
-    // Maximum number of tokens after a contrastive where weighting applies
-    private int contrastiveWindow = 10;
 }
-
-

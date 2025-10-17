@@ -7,6 +7,7 @@ import com.kapil.verbametrics.dto.TextAnalysisResponse;
 import com.kapil.verbametrics.services.BasicTextAnalysisService;
 import com.kapil.verbametrics.services.ReadabilityAnalysisService;
 import com.kapil.verbametrics.services.SentimentAnalysisService;
+import com.kapil.verbametrics.ui.util.GuiConstants;
 
 /**
  * Controller class to handle text analysis operations.
@@ -43,7 +44,7 @@ public record TextAnalysisController(BasicTextAnalysisService basicService, Sent
         if (text == null || text.isBlank()) {
             throw new IllegalArgumentException("Text cannot be null or blank");
         }
-        if (text.length() > 10000) {
+        if (text.length() > GuiConstants.MAX_TEXT_LENGTH) {
             throw new IllegalArgumentException("Text too long (max 10,000 characters)");
         }
     }
