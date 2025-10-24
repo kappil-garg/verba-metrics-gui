@@ -1,6 +1,5 @@
 package com.kapil.verbametrics.services.impl;
 
-import com.kapil.verbametrics.config.SentimentAnalysisProperties;
 import com.kapil.verbametrics.domain.SentimentScore;
 import com.kapil.verbametrics.services.SentimentAnalysisService;
 import com.kapil.verbametrics.services.classifiers.SentimentLabelClassifier;
@@ -10,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.Objects;
 
 /**
  * Implementation of SentimentAnalysisService using calculation engine and label classifier.
@@ -26,31 +23,39 @@ public class SentimentAnalysisServiceImpl implements SentimentAnalysisService {
 
     private final SentimentCalculationEngine calculationEngine;
     private final SentimentLabelClassifier labelClassifier;
-    private final SentimentAnalysisProperties sentimentProperties;
 
     @Autowired
     public SentimentAnalysisServiceImpl(SentimentCalculationEngine calculationEngine,
-                                        SentimentLabelClassifier labelClassifier,
-                                        SentimentAnalysisProperties sentimentProperties) {
+                                        SentimentLabelClassifier labelClassifier) {
         this.calculationEngine = calculationEngine;
         this.labelClassifier = labelClassifier;
-        this.sentimentProperties = sentimentProperties;
     }
 
+    /**
+     * Analyzes the sentiment of the given text and returns a SentimentScore with confidence.
+     *
+     * @param text the text to analyze
+     * @return the sentiment score with label and confidence
+     */
     @Override
     public SentimentScore analyzeSentiment(String text) {
         return analyzeSentiment(text, true);
     }
 
+    /**
+     * Analyzes the sentiment of the given text and returns a SentimentScore.
+     *
+     * @param text              the text to analyze
+     * @param includeConfidence whether to include confidence score
+     * @return the sentiment score with label and confidence
+     */
     @Override
     public SentimentScore analyzeSentiment(String text, boolean includeConfidence) {
-        Objects.requireNonNull(text, "Text cannot be null");
+        if (text == null || text.isBlank()) {
+            return new SentimentScore(VerbaMetricsConstants.NEUTRAL, 1.0, 0.0);
+        }
         LOGGER.debug("Starting sentiment analysis for text of length: {}", text.length());
         try {
-            if (text.isBlank()) {
-                return new SentimentScore(VerbaMetricsConstants.NEUTRAL, 1.0, 0.0);
-            }
-            // Delegate to specialized engines
             double score = calculationEngine.calculateSentimentScore(text);
             String label = labelClassifier.determineSentimentLabel(score);
             double confidence = includeConfidence ? calculateConfidence(text, score) : 1.0;
@@ -64,23 +69,19 @@ public class SentimentAnalysisServiceImpl implements SentimentAnalysisService {
     }
 
     /**
-     * Calculates confidence score based on text length and sentiment score magnitude.
+     * Calculates confidence score based on sentiment score magnitude and text length.
      *
      * @param text  the input text
      * @param score the calculated sentiment score
-     * @return confidence score between 0.1 and the configured maximum confidence level
+     * @return confidence score between 0.1 and 1.0
      */
     private double calculateConfidence(String text, double score) {
-        int totalWords = text.split("\\s+").length;
+        int totalWords = Math.max(1, text.split("\\s+").length);
         double scoreMagnitude = Math.abs(score);
-        double baseConfidence = Math.min(scoreMagnitude * 2, 1.0);
-        double lengthFactor = Math.min(totalWords / 10.0, 1.0);
-        double confidence = Math.max(0.1, baseConfidence * lengthFactor);
-        if (confidence >= sentimentProperties.getConfidenceLevels().getHigh()) {
-            return sentimentProperties.getConfidenceLevels().getHigh();
-        } else {
-            return Math.min(confidence, sentimentProperties.getConfidenceLevels().getMedium());
-        }
+        double sentimentConfidence = Math.min(0.9, 0.1 + (scoreMagnitude * 0.8));
+        double lengthFactor = Math.min(1.0, 0.3 + (totalWords / 15.0));
+        double finalConfidence = sentimentConfidence * lengthFactor;
+        return Math.max(0.1, Math.min(0.95, finalConfidence));
     }
 
 }

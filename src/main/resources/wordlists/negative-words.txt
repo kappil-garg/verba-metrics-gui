@@ -34,6 +34,7 @@ inferior
 poor
 horrible
 disappointing
+disappointed
 annoying
 irritating
 bothersome
@@ -82,8 +83,6 @@ horrifying
 shocking
 alarming
 distressing
-upsetting
-devastating
 crushing
 overwhelming
 burdensome
@@ -93,8 +92,6 @@ suffocating
 choking
 strangling
 killing
-destroying
-ruining
 wasting
 losing
 missing
@@ -158,8 +155,6 @@ deceitful
 dishonest
 lying
 cheating
-stealing
-robbing
 betraying
 abandoning
 leaving
@@ -171,8 +166,6 @@ yielding
 submitting
 conceding
 admitting
-defeat
-losing
 failing
 falling
 sinking
@@ -229,9 +222,6 @@ working
 laboring
 toiling
 sweating
-struggling
-fighting
-battling
 wrestling
 grappling
 clashing
@@ -244,7 +234,6 @@ destroying
 demolishing
 wrecking
 ruining
-devastating
 ravaging
 plundering
 looting
@@ -261,7 +250,6 @@ trapping
 ensnaring
 entangling
 complicating
-confusing
 mixing
 blending
 merging
@@ -277,7 +265,6 @@ fixing
 repairing
 mending
 healing
-curing
 treating
 caring
 nurturing
@@ -301,9 +288,6 @@ concluding
 ending
 resolving
 solving
-fixing
-repairing
-healing
 curing
 recovering
 restoring
@@ -312,3 +296,25 @@ refreshing
 revitalizing
 regenerating
 rejuvenating
+
+# Added specific negatives commonly found in product reviews
+poorly
+unresponsive
+regret
+waste
+
+# Event-related negatives
+chaotic
+unprepared
+stressful
+
+# Communication/management-related negatives
+uncommunicated
+mismanaged
+mismanagement
+miscommunicated
+miscommunication
+disorganized
+disorganisation
+disorganised
+disorganization
