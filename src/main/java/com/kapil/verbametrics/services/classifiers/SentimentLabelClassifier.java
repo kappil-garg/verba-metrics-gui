@@ -28,9 +28,9 @@ public class SentimentLabelClassifier {
      * @return the sentiment label
      */
     public String determineSentimentLabel(double score) {
-        if (score > properties.getThresholds().getPositive()) {
+        if (score >= properties.getThresholds().getPositive()) {
             return VerbaMetricsConstants.POSITIVE;
-        } else if (score < properties.getThresholds().getNegative()) {
+        } else if (score <= properties.getThresholds().getNegative()) {
             return VerbaMetricsConstants.NEGATIVE;
         } else {
             return VerbaMetricsConstants.NEUTRAL;

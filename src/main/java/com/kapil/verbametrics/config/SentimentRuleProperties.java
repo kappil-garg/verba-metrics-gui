@@ -55,7 +55,15 @@ public class SentimentRuleProperties {
             "not good", -0.8
     );
 
+    private int negationWindow = 3;
     private int contrastiveWindow = 10;
     private double normalizationAlpha = 15.0;
+
+    private List<String> negations = List.of(
+            "not", "no", "never", "none", "nobody", "nothing", "neither", "nowhere", "hardly", "scarcely", "barely",
+            "isnt", "isn't", "arent", "aren't", "wasnt", "wasn't", "werent", "weren't", "dont", "don't", "doesnt", "doesn't",
+            "didnt", "didn't", "cant", "can't", "cannot", "couldnt", "couldn't", "wont", "won't", "wouldnt", "wouldn't",
+            "shouldnt", "shouldn't", "hasnt", "hasn't", "havent", "haven't", "hadnt", "hadn't"
+    );
 
 }

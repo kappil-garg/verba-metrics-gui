@@ -54,4 +54,6 @@ public final class VerbaMetricsConstants {
     public static final String K_POOR = "POOR";
     public static final String K_VERY_POOR = "VERY_POOR";
 
+    public static final String APOSTROPHE_PLACEHOLDER = " APOSTROPHE ";
+
 }
