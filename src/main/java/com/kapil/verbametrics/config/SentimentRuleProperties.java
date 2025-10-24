@@ -55,6 +55,7 @@ public class SentimentRuleProperties {
             "not good", -0.8
     );
 
+    private int negationWindow = 3;
     private int contrastiveWindow = 10;
     private double normalizationAlpha = 15.0;
 

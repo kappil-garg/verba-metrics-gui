@@ -56,6 +56,7 @@ public class SentimentAnalysisProperties {
         private String wordSeparator = "\\W+";
         private boolean caseSensitive = false;
         private boolean removePunctuation = true;
+        private boolean normalizeHyphens = true;
     }
 
     @Data

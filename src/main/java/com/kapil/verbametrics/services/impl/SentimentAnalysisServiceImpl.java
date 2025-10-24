@@ -52,7 +52,7 @@ public class SentimentAnalysisServiceImpl implements SentimentAnalysisService {
     @Override
     public SentimentScore analyzeSentiment(String text, boolean includeConfidence) {
         if (text == null || text.isBlank()) {
-            return new SentimentScore(VerbaMetricsConstants.NEUTRAL, 1.0, 0.0);
+            return new SentimentScore(VerbaMetricsConstants.NEUTRAL, includeConfidence ? 1.0 : 0.0, 0.0);
         }
         LOGGER.debug("Starting sentiment analysis for text of length: {}", text.length());
         try {

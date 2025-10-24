@@ -3,6 +3,9 @@ package com.kapil.verbametrics.services.engines;
 import com.kapil.verbametrics.config.SentimentAnalysisProperties;
 import com.kapil.verbametrics.config.SentimentRuleProperties;
 import com.kapil.verbametrics.services.WordListService;
+import com.kapil.verbametrics.util.VerbaMetricsConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +20,8 @@ import java.util.Set;
  */
 @Component
 public class SentimentCalculationEngine {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SentimentCalculationEngine.class);
 
     private final WordListService wordListService;
     private final SentimentRuleProperties ruleProperties;
@@ -64,21 +69,29 @@ public class SentimentCalculationEngine {
         String normalized = getNormalizedString(text);
         String[] tokens = normalized.split(analysisProperties.getTextProcessing().getWordSeparator());
         for (int i = 0; i < tokens.length; i++) {
-            tokens[i] = tokens[i].replace(" APOSTROPHE ", "'");
+            tokens[i] = tokens[i].replace(VerbaMetricsConstants.APOSTROPHE_PLACEHOLDER, "'");
         }
         return tokens;
     }
 
     /**
      * Normalizes the input text based on case sensitivity and preprocessing rules.
+     * <p>
+     * Note: Hyphen normalization replaces all hyphens with spaces, which may break
+     * hyphenated compound words (e.g., 'state-of-the-art' becomes 'state of the art').
+     * This behavior can be disabled via the normalizeHyphens configuration property.
      *
      * @param text the text to normalize
      * @return the normalized string
      */
     private String getNormalizedString(String text) {
         boolean caseSensitive = analysisProperties.getTextProcessing().isCaseSensitive();
-        String preprocessed = text.replace('-', ' ');
-        preprocessed = preprocessed.replaceAll("'", " APOSTROPHE ");
+        boolean normalizeHyphens = analysisProperties.getTextProcessing().isNormalizeHyphens();
+        String preprocessed = text;
+        if (normalizeHyphens) {
+            preprocessed = preprocessed.replace('-', ' ');
+        }
+        preprocessed = preprocessed.replaceAll("'", VerbaMetricsConstants.APOSTROPHE_PLACEHOLDER);
         return caseSensitive ? preprocessed.trim() : preprocessed.trim().toLowerCase();
     }
 
@@ -147,7 +160,7 @@ public class SentimentCalculationEngine {
         if (!isPositive && !isNegative) {
             return 0.0;
         }
-        double valence = calculateValence(isPositive, isNegative, context);
+        double valence = calculateValence(token, isPositive, isNegative, context);
         double modifier = calculateModifier(tokens, index, context);
         double contribution = valence * modifier;
         updateNegationWindow(context);
@@ -187,7 +200,7 @@ public class SentimentCalculationEngine {
                 context.negationWindow = 0;
             } else {
                 context.negationActive = true;
-                context.negationWindow = 3;
+                context.negationWindow = ruleProperties.getNegationWindow();
             }
         }
     }
@@ -195,14 +208,16 @@ public class SentimentCalculationEngine {
     /**
      * Calculates valence (positive/negative) with negation handling.
      *
+     * @param token      the current token being processed
      * @param isPositive true if the token is positive
      * @param isNegative true if the token is negative
      * @param context    the sentiment context
      * @return the valence
      */
-    private double calculateValence(boolean isPositive, boolean isNegative, SentimentContext context) {
+    private double calculateValence(String token, boolean isPositive, boolean isNegative, SentimentContext context) {
         if (isPositive && isNegative) {
-            // A word can't be both positive and negative
+            // A word can't be both positive and negative - this indicates data quality issues
+            LOGGER.warn("Word '{}' found in both positive and negative word lists - this may indicate data quality issues in the sentiment lexicons", token);
             return 0.0;
         }
         double valence = isPositive ? 1.0 : -1.0;
@@ -230,7 +245,6 @@ public class SentimentCalculationEngine {
             if (boost != null) {
                 modifier += Math.abs(boost);
             }
-
             Double damp = ruleProperties.getDampeners().get(prev);
             if (damp != null) {
                 modifier -= Math.abs(damp);
