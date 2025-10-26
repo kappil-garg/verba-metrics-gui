@@ -28,7 +28,6 @@ public class MLEnginesTest {
     public void testMLModelService() {
         assertNotNull(mlModelService);
         assertNotNull(mlModelService.listModels());
-        assertNotNull(mlModelService.listActiveModels());
     }
 
     @Test

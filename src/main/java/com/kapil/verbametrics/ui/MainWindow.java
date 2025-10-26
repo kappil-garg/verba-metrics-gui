@@ -1,5 +1,6 @@
 package com.kapil.verbametrics.ui;
 
+import com.kapil.verbametrics.ui.panels.MLModelPanel;
 import com.kapil.verbametrics.ui.panels.TextAnalysisPanel;
 import com.kapil.verbametrics.ui.util.GuiConstants;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -38,6 +39,7 @@ public class MainWindow extends JFrame {
     private void initUi() {
         JTabbedPane tabs = new JTabbedPane();
         tabs.addTab("Text Analysis", new TextAnalysisPanel(applicationContext));
+        tabs.addTab("ML Models", new MLModelPanel(applicationContext));
         getContentPane().setLayout(new BorderLayout());
         getContentPane().add(tabs, BorderLayout.CENTER);
     }

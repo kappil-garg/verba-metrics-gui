@@ -60,43 +60,11 @@ public interface MLModelService {
     List<MLModel> listModels();
 
     /**
-     * Lists models by type.
-     *
-     * @param modelType The type of models to list
-     * @return List of models of the specified type
-     */
-    List<MLModel> listModelsByType(String modelType);
-
-    /**
-     * Lists active models only.
-     *
-     * @return List of active models
-     */
-    List<MLModel> listActiveModels();
-
-    /**
      * Deletes a trained model.
      *
      * @param modelId The ID of the model to delete
      * @return true if deletion was successful
      */
     boolean deleteModel(String modelId);
-
-    /**
-     * Updates model metadata.
-     *
-     * @param modelId The ID of the model to update
-     * @param updates Map of fields to update
-     * @return Updated model information
-     */
-    MLModel updateModel(String modelId, Map<String, Object> updates);
-
-    /**
-     * Gets model performance statistics.
-     *
-     * @param modelId The ID of the model
-     * @return Performance statistics
-     */
-    Map<String, Object> getModelStatistics(String modelId);
 
 }
