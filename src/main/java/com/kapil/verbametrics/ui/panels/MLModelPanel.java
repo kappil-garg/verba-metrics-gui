@@ -3,8 +3,8 @@ package com.kapil.verbametrics.ui.panels;
 import com.kapil.verbametrics.ml.domain.MLModel;
 import com.kapil.verbametrics.ml.domain.ModelEvaluationResult;
 import com.kapil.verbametrics.ml.domain.ModelTrainingResult;
-import com.kapil.verbametrics.ml.services.ModelCleanupService;
 import com.kapil.verbametrics.ml.services.MLModelService;
+import com.kapil.verbametrics.ml.services.ModelCleanupService;
 import com.kapil.verbametrics.ui.controller.MLModelController;
 import com.kapil.verbametrics.ui.util.FileOperationsUtil;
 import com.kapil.verbametrics.ui.util.UIStateUtil;
@@ -40,8 +40,8 @@ public class MLModelPanel extends JPanel {
     private final JButton viewDetailsBtn = new JButton("View Details");
 
     // Model Selection Components (shared across tabs)
-    private final JComboBox<String> evaluationModelCombo = new JComboBox<>();
-    private final JComboBox<String> predictionModelCombo = new JComboBox<>();
+    private final JComboBox<MLModel> evaluationModelCombo = new JComboBox<>();
+    private final JComboBox<MLModel> predictionModelCombo = new JComboBox<>();
 
     // Training Components
     private final JComboBox<String> modelTypeCombo = new JComboBox<>(new String[]{"SENTIMENT", "CLASSIFICATION", "TOPIC_MODELING"});
@@ -93,6 +93,33 @@ public class MLModelPanel extends JPanel {
         add(tabbedPane, BorderLayout.CENTER);
         JPanel resultsPanel = createResultsPanel();
         add(resultsPanel, BorderLayout.SOUTH);
+        setupModelComboRenderers();
+    }
+
+    /**
+     * Setup custom renderers for model combo boxes to display name and type.
+     */
+    private void setupModelComboRenderers() {
+        evaluationModelCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof MLModel model) {
+                    setText(model.name() + " (" + model.modelType() + ")");
+                }
+                return this;
+            }
+        });
+        predictionModelCombo.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof MLModel model) {
+                    setText(model.name() + " (" + model.modelType() + ")");
+                }
+                return this;
+            }
+        });
     }
 
     /**
@@ -324,9 +351,8 @@ public class MLModelPanel extends JPanel {
         evaluationModelCombo.removeAllItems();
         predictionModelCombo.removeAllItems();
         for (MLModel model : models) {
-            String displayText = model.name() + " (" + model.modelType() + ")";
-            evaluationModelCombo.addItem(displayText);
-            predictionModelCombo.addItem(displayText);
+            evaluationModelCombo.addItem(model);
+            predictionModelCombo.addItem(model);
         }
         if (!models.isEmpty()) {
             evaluationModelCombo.setSelectedIndex(0);
@@ -513,8 +539,8 @@ public class MLModelPanel extends JPanel {
     private void evaluateModel() {
         clearResults();
         try {
-            String selectedModel = (String) evaluationModelCombo.getSelectedItem();
-            if (selectedModel == null || selectedModel.isEmpty()) {
+            MLModel selectedModel = (MLModel) evaluationModelCombo.getSelectedItem();
+            if (selectedModel == null) {
                 UIStateUtil.showError(this, "Please select a model to evaluate", "No Model Selected");
                 return;
             }
@@ -523,20 +549,10 @@ public class MLModelPanel extends JPanel {
                 UIStateUtil.showError(this, "Please provide test data for evaluation", "No Test Data");
                 return;
             }
-            String modelId = selectedModel.substring(0, selectedModel.lastIndexOf(" ("));
-            List<MLModel> models = controller.getAllModels();
-            MLModel targetModel = models.stream()
-                    .filter(model -> model.name().equals(modelId))
-                    .findFirst()
-                    .orElse(null);
-            if (targetModel == null) {
-                UIStateUtil.showError(this, "Selected model not found", "Model Not Found");
-                return;
-            }
             List<Map<String, Object>> testData = JsonParserUtil.parseTrainingData(testDataJson);
-            ModelEvaluationResult result = controller.evaluateModel(targetModel.modelId(), testData);
+            ModelEvaluationResult result = controller.evaluateModel(selectedModel.modelId(), testData);
             appendResult("=== Model Evaluation Results ===");
-            appendResult("Model: " + targetModel.name() + " (" + targetModel.modelType() + ")");
+            appendResult("Model: " + selectedModel.name() + " (" + selectedModel.modelType() + ")");
             appendResult("Test Data Size: " + testData.size() + " samples");
             appendResult("Accuracy: " + String.format("%.3f", result.accuracy()));
             appendResult("Precision: " + String.format("%.3f", result.precision()));
@@ -555,24 +571,14 @@ public class MLModelPanel extends JPanel {
     private void makePrediction() {
         clearResults();
         try {
-            String selectedModel = (String) predictionModelCombo.getSelectedItem();
-            if (selectedModel == null || selectedModel.isEmpty()) {
+            MLModel selectedModel = (MLModel) predictionModelCombo.getSelectedItem();
+            if (selectedModel == null) {
                 UIStateUtil.showError(this, "Please select a model for prediction", "No Model Selected");
                 return;
             }
             String inputDataJson = predictionInputArea.getText().trim();
             if (inputDataJson.isEmpty()) {
                 UIStateUtil.showError(this, "Please provide input data for prediction", "No Input Data");
-                return;
-            }
-            String modelId = selectedModel.substring(0, selectedModel.lastIndexOf(" ("));
-            List<MLModel> models = controller.getAllModels();
-            MLModel targetModel = models.stream()
-                    .filter(model -> model.name().equals(modelId))
-                    .findFirst()
-                    .orElse(null);
-            if (targetModel == null) {
-                UIStateUtil.showError(this, "Selected model not found", "Model Not Found");
                 return;
             }
             List<Map<String, Object>> inputDataList;
@@ -583,16 +589,14 @@ public class MLModelPanel extends JPanel {
                 return;
             }
             appendResult("=== Prediction Results ===");
-            appendResult("Model: " + targetModel.name() + " (" + targetModel.modelType() + ")");
+            appendResult("Model: " + selectedModel.name() + " (" + selectedModel.modelType() + ")");
             appendResult("Input Data Size: " + inputDataList.size() + " samples");
             appendResult("");
             for (int i = 0; i < inputDataList.size(); i++) {
                 Map<String, Object> input = inputDataList.get(i);
-                Map<String, Object> prediction = controller.predict(targetModel.modelId(), input);
-
+                Map<String, Object> prediction = controller.predict(selectedModel.modelId(), input);
                 appendResult("Sample " + (i + 1) + ":");
                 appendResult("  Input: " + input.get("text"));
-
                 if (prediction.containsKey("error") && (Boolean) prediction.get("error")) {
                     appendResult("  Error: " + prediction.get("message"));
                 } else {

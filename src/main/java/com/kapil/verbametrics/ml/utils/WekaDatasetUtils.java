@@ -25,7 +25,9 @@ public class WekaDatasetUtils {
         if (data == null || data.isEmpty()) {
             throw new IllegalArgumentException("Data cannot be null or empty");
         }
-        validateDatasetName(datasetName);
+        if (datasetName == null || datasetName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Dataset name cannot be null or empty");
+        }
         Map<String, Object> firstData = data.getFirst();
         DatasetMetadata metadata = createDatasetSchema(firstData, data);
         Instances dataset = new Instances(datasetName, metadata.attributes(), data.size());
@@ -35,17 +37,6 @@ public class WekaDatasetUtils {
             dataset.add(instance);
         }
         return dataset;
-    }
-
-    /**
-     * Validate dataset name.
-     *
-     * @param datasetName The name for the dataset
-     */
-    private static void validateDatasetName(String datasetName) {
-        if (datasetName == null || datasetName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Dataset name cannot be null or empty");
-        }
     }
 
     /**

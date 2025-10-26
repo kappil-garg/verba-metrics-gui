@@ -42,6 +42,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-json")
 
     implementation("com.h2database:h2")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")

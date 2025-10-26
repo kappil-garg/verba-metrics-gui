@@ -176,9 +176,13 @@ public class ModelTrainingEngine {
     private Object trainSentimentModel(List<Map<String, Object>> trainingData, Map<String, Object> parameters) throws Exception {
         Instances dataset = createWekaDataset(trainingData);
         Instances numericDataset = new Instances(dataset);
+        // Remove text attribute (index 0) as RandomTree works only with numeric features
         numericDataset.deleteAttributeAt(0);
         RandomTree model = new RandomTree();
-        configureRandomTreeModel(model, parameters);
+        // Add dataset size to parameters for adaptive configuration
+        Map<String, Object> adaptiveParams = new HashMap<>(parameters);
+        adaptiveParams.put("datasetSize", trainingData.size());
+        configureRandomTreeModel(model, adaptiveParams);
         model.buildClassifier(numericDataset);
         return model;
     }
@@ -195,9 +199,13 @@ public class ModelTrainingEngine {
     private Object trainClassificationModel(List<Map<String, Object>> trainingData, Map<String, Object> parameters) throws Exception {
         Instances dataset = createWekaDataset(trainingData);
         Instances numericDataset = new Instances(dataset);
+        // Remove text attribute (index 0) as RandomTree works only with numeric features
         numericDataset.deleteAttributeAt(0);
         RandomTree classifier = new RandomTree();
-        configureRandomTreeModel(classifier, parameters);
+        // Add dataset size to parameters for adaptive configuration
+        Map<String, Object> adaptiveParams = new HashMap<>(parameters);
+        adaptiveParams.put("datasetSize", trainingData.size());
+        configureRandomTreeModel(classifier, adaptiveParams);
         classifier.buildClassifier(numericDataset);
         return classifier;
     }
@@ -260,25 +268,31 @@ public class ModelTrainingEngine {
 
     /**
      * Configures a RandomTree model with parameters from configuration.
+     * Uses adaptive settings based on dataset size to prevent overfitting.
      *
      * @param model      The RandomTree model to configure
      * @param parameters The training parameters
      */
     private void configureRandomTreeModel(RandomTree model, Map<String, Object> parameters) {
         try {
-            model.setMaxDepth(8);
-            model.setMinNum(1);
+            // Adaptive defaults based on dataset size
+            int datasetSize = parameters.containsKey("datasetSize") ? (Integer) parameters.get("datasetSize") : 100;
+            // Adjust depth based on dataset size
+            int maxDepth = datasetSize < 20 ? 3 : (datasetSize < 50 ? 5 : 8);
+            int minNum = datasetSize < 20 ? 2 : 1;
+            model.setMaxDepth(maxDepth);
+            model.setMinNum(minNum);
             model.setSeed(42);
             if (parameters.containsKey(VerbaMetricsConstants.PARAM_MAX_DEPTH)) {
-                int maxDepth = (Integer) parameters.get(VerbaMetricsConstants.PARAM_MAX_DEPTH);
-                if (maxDepth > 0) {
-                    model.setMaxDepth(maxDepth);
+                int paramMaxDepth = (Integer) parameters.get(VerbaMetricsConstants.PARAM_MAX_DEPTH);
+                if (paramMaxDepth > 0) {
+                    model.setMaxDepth(Math.min(paramMaxDepth, maxDepth));
                 }
             }
             if (parameters.containsKey(VerbaMetricsConstants.PARAM_MIN_SAMPLES_SPLIT)) {
                 int minSamplesSplit = (Integer) parameters.get(VerbaMetricsConstants.PARAM_MIN_SAMPLES_SPLIT);
                 if (minSamplesSplit > 0) {
-                    model.setMinNum(minSamplesSplit);
+                    model.setMinNum(Math.max(minSamplesSplit, minNum));
                 }
             }
             if (parameters.containsKey(VerbaMetricsConstants.PARAM_MIN_SAMPLES_LEAF)) {
@@ -308,6 +322,7 @@ public class ModelTrainingEngine {
             try {
                 Instances dataset = createWekaDataset(trainingData);
                 Instances numericDataset = new Instances(dataset);
+                // Remove text attribute (index 0) as RandomTree works only with numeric features
                 numericDataset.deleteAttributeAt(0);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
                 evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
@@ -334,6 +349,7 @@ public class ModelTrainingEngine {
             try {
                 Instances dataset = createWekaDataset(trainingData);
                 Instances numericDataset = new Instances(dataset);
+                // Remove text attribute (index 0) as RandomTree works only with numeric features
                 numericDataset.deleteAttributeAt(0);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
                 evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
@@ -360,6 +376,7 @@ public class ModelTrainingEngine {
             try {
                 Instances dataset = createWekaDataset(trainingData);
                 Instances numericDataset = new Instances(dataset);
+                // Remove text attribute (index 0) as RandomTree works only with numeric features
                 numericDataset.deleteAttributeAt(0);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
                 evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
