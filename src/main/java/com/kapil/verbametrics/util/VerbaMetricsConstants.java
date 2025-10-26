@@ -56,4 +56,10 @@ public final class VerbaMetricsConstants {
 
     public static final String APOSTROPHE_PLACEHOLDER = " APOSTROPHE ";
 
+    // Training parameter keys
+    public static final String PARAM_MAX_DEPTH = "max-depth";
+    public static final String PARAM_RANDOM_STATE = "random-state";
+    public static final String PARAM_MIN_SAMPLES_SPLIT = "min-samples-split";
+    public static final String PARAM_MIN_SAMPLES_LEAF = "min-samples-leaf";
+
 }

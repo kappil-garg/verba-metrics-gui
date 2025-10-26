@@ -45,7 +45,6 @@ public class ModelEvaluationEngine {
     public ModelEvaluationResult evaluateModel(String modelId, List<Map<String, Object>> testData) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(testData, "Test data cannot be null");
-        LOGGER.debug("Starting model evaluation for model: {} with {} test points", modelId, testData.size());
         try {
             return doEvaluateModel(modelId, testData);
         } catch (Exception e) {
@@ -64,8 +63,14 @@ public class ModelEvaluationEngine {
      */
     private ModelEvaluationResult doEvaluateModel(String modelId, List<Map<String, Object>> testData) throws Exception {
         long startTime = System.currentTimeMillis();
+        if (testData.isEmpty()) {
+            throw new IllegalArgumentException("Test data cannot be empty");
+        }
         Object model = fileManager.loadModelFromFile(modelId)
                 .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
+        if (!(model instanceof Classifier)) {
+            throw new IllegalArgumentException("Loaded model is not a Weka Classifier: " + model.getClass().getSimpleName());
+        }
         Map<String, Object> evaluationMetrics = performModelEvaluation(model, testData);
         long evaluationTime = System.currentTimeMillis() - startTime;
         LOGGER.info("Model evaluation completed in {}ms for model: {}", evaluationTime, modelId);
@@ -151,7 +156,6 @@ public class ModelEvaluationEngine {
     private Instances createWekaDataset(List<Map<String, Object>> testData) {
         return WekaDatasetUtils.createDataset(testData, "TestDataset");
     }
-
 
     /**
      * Builds a failed evaluation result in case of exceptions.

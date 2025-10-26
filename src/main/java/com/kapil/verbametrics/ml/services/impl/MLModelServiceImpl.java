@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,13 +59,11 @@ public class MLModelServiceImpl implements MLModelService {
         Objects.requireNonNull(modelType, "Model type cannot be null");
         Objects.requireNonNull(trainingData, "Training data cannot be null");
         Objects.requireNonNull(parameters, "Parameters cannot be null");
-        LOGGER.debug("Starting model training for type: {} with {} data points", modelType, trainingData.size());
         try {
             ModelTrainingResult result = trainingService.trainModel(modelType, trainingData, parameters);
             MLModel model = createMLModelFromResult(result, modelType, parameters);
             MLModelEntity entity = modelMapper.toEntity(model);
             modelRepository.save(entity);
-            LOGGER.debug("Model training completed and saved: {}", result.modelId());
             return result;
         } catch (Exception e) {
             LOGGER.error("Failed to train model", e);
@@ -78,7 +75,6 @@ public class MLModelServiceImpl implements MLModelService {
     public ModelEvaluationResult evaluateModel(String modelId, List<Map<String, Object>> testData) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(testData, "Test data cannot be null");
-        LOGGER.debug("Starting model evaluation for model: {} with {} test points", modelId, testData.size());
         try {
             if (!modelRepository.existsById(modelId)) {
                 throw new IllegalArgumentException("Model not found: " + modelId);
@@ -97,7 +93,6 @@ public class MLModelServiceImpl implements MLModelService {
     public Map<String, Object> predict(String modelId, Map<String, Object> input) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(input, "Input cannot be null");
-        LOGGER.debug("Making prediction with model: {}", modelId);
         try {
             MLModel model = getModel(modelId);
             if (!model.isReadyForUse()) {
@@ -120,23 +115,7 @@ public class MLModelServiceImpl implements MLModelService {
 
     @Override
     public List<MLModel> listModels() {
-        LOGGER.debug("Listing all models");
         return modelRepository.findAll().stream()
-                .map(modelMapper::toDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<MLModel> listModelsByType(String modelType) {
-        Objects.requireNonNull(modelType, "Model type cannot be null");
-        return modelRepository.findByModelType(modelType).stream()
-                .map(modelMapper::toDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<MLModel> listActiveModels() {
-        return modelRepository.findByIsActiveTrue().stream()
                 .map(modelMapper::toDomain)
                 .collect(Collectors.toList());
     }
@@ -144,58 +123,14 @@ public class MLModelServiceImpl implements MLModelService {
     @Override
     public boolean deleteModel(String modelId) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
-        LOGGER.debug("Deleting model: {}", modelId);
         if (modelRepository.existsById(modelId)) {
             modelRepository.deleteById(modelId);
-            LOGGER.debug("Model deleted successfully: {}", modelId);
             return true;
         } else {
             LOGGER.warn("Model not found for deletion: {}", modelId);
             return false;
         }
     }
-
-    @Override
-    public MLModel updateModel(String modelId, Map<String, Object> updates) {
-        Objects.requireNonNull(modelId, "Model ID cannot be null");
-        Objects.requireNonNull(updates, "Updates cannot be null");
-        LOGGER.debug("Updating model: {}", modelId);
-        MLModelEntity entity = modelRepository.findById(modelId)
-                .orElseThrow(() -> new IllegalArgumentException("Model not found: " + modelId));
-        if (updates.containsKey("name")) {
-            entity.setName((String) updates.get("name"));
-        }
-        if (updates.containsKey("description")) {
-            entity.setDescription((String) updates.get("description"));
-        }
-        if (updates.containsKey("isActive")) {
-            entity.setIsActive((Boolean) updates.get("isActive"));
-        }
-        if (updates.containsKey("status")) {
-            entity.setStatus((String) updates.get("status"));
-        }
-        MLModelEntity savedEntity = modelRepository.save(entity);
-        LOGGER.debug("Model updated successfully: {}", modelId);
-        return modelMapper.toDomain(savedEntity);
-    }
-
-    @Override
-    public Map<String, Object> getModelStatistics(String modelId) {
-        Objects.requireNonNull(modelId, "Model ID cannot be null");
-        MLModel model = getModel(modelId);
-        Map<String, Object> statistics = new HashMap<>();
-        statistics.put("modelId", model.modelId());
-        statistics.put("modelType", model.modelType());
-        statistics.put("accuracy", model.accuracy());
-        statistics.put("isActive", model.isActive());
-        statistics.put("status", model.status());
-        statistics.put("performanceLevel", model.getPerformanceLevel());
-        statistics.put("trainingDataSize", model.trainingDataSize());
-        statistics.put("createdAt", model.createdAt());
-        statistics.put("lastUsed", model.lastUsed());
-        return statistics;
-    }
-
 
     /**
      * Creates an ML model from training result.

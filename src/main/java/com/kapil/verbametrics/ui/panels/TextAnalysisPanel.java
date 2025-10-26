@@ -29,7 +29,7 @@ import static com.kapil.verbametrics.ui.util.GuiConstants.*;
  */
 public class TextAnalysisPanel extends JPanel {
 
-    private static final Logger logger = LoggerFactory.getLogger(TextAnalysisPanel.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TextAnalysisPanel.class);
 
     private final TextAnalysisController controller;
 
@@ -273,7 +273,7 @@ public class TextAnalysisPanel extends JPanel {
                 String content = FileOperationsUtil.loadTextFile(file.toPath());
                 UIStateUtil.setTextAreaContent(inputArea, content, -1);
             } catch (Exception ex) {
-                logger.error("Failed to load file", ex);
+                LOGGER.error("Failed to load file", ex);
                 UIStateUtil.showError(this, "Failed to load file: " + ex.getMessage(), "Failed to load file");
             }
         }
@@ -310,7 +310,7 @@ public class TextAnalysisPanel extends JPanel {
                 FileOperationsUtil.saveTextFile(outputArea.getText(), file.toPath());
                 UIStateUtil.showInfo(this, "Results exported successfully!", "Export Successful");
             } catch (IOException ex) {
-                logger.error("Failed to export results", ex);
+                LOGGER.error("Failed to export results", ex);
                 UIStateUtil.showError(this, "Failed to export results: " + ex.getMessage(), "Export Failed");
             }
         }
@@ -339,7 +339,7 @@ public class TextAnalysisPanel extends JPanel {
                 UIStateUtil.setTextAreaContent(outputArea, formattedResult, -1);
             } catch (Exception ex) {
                 UIStateUtil.clearTextArea(outputArea);
-                logger.error("Analysis failed", ex);
+                LOGGER.error("Analysis failed", ex);
                 UIStateUtil.showError(TextAnalysisPanel.this, "Analysis failed: " + ex.getMessage(), "Analysis Failed");
             }
         }

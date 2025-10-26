@@ -1,6 +1,7 @@
 package com.kapil.verbametrics.ml.engines;
 
 import com.kapil.verbametrics.ml.classifiers.ModelTypeClassifier;
+import com.kapil.verbametrics.ml.config.ClassValueManager;
 import com.kapil.verbametrics.ml.config.MLModelProperties;
 import com.kapil.verbametrics.ml.domain.ModelTrainingResult;
 import com.kapil.verbametrics.ml.managers.ModelFileManager;
@@ -16,9 +17,7 @@ import weka.classifiers.trees.RandomTree;
 import weka.core.Instances;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 public class ModelTrainingEngine {
@@ -28,12 +27,15 @@ public class ModelTrainingEngine {
     private final MLModelProperties properties;
     private final ModelFileManager fileManager;
     private final ModelTypeClassifier modelTypeClassifier;
+    private final ClassValueManager classValueManager;
 
     @Autowired
-    public ModelTrainingEngine(MLModelProperties properties, ModelFileManager fileManager, ModelTypeClassifier modelTypeClassifier) {
+    public ModelTrainingEngine(MLModelProperties properties, ModelFileManager fileManager,
+                               ModelTypeClassifier modelTypeClassifier, ClassValueManager classValueManager) {
         this.properties = properties;
         this.fileManager = fileManager;
         this.modelTypeClassifier = modelTypeClassifier;
+        this.classValueManager = classValueManager;
     }
 
     /**
@@ -52,12 +54,12 @@ public class ModelTrainingEngine {
         Objects.requireNonNull(modelType, "Model type cannot be null");
         Objects.requireNonNull(trainingData, "Training data cannot be null");
         Objects.requireNonNull(parameters, "Parameters cannot be null");
-        LOGGER.debug("Starting model training for type: {} with {} data points", modelType, trainingData.size());
         try {
             long startTime = System.currentTimeMillis();
             Object trainedModel = performModelTraining(modelType, trainingData, parameters);
             long trainingTime = System.currentTimeMillis() - startTime;
             fileManager.saveModelToFile(modelId, trainedModel);
+            storeClassValuesForModel(modelId, trainingData);
             Map<String, Object> performanceMetrics = calculatePerformanceMetrics(trainedModel, trainingData, modelType);
             LOGGER.info("Model training completed successfully in {}ms for model: {}", trainingTime, modelId);
             return new ModelTrainingResult(
@@ -105,7 +107,8 @@ public class ModelTrainingEngine {
         return switch (modelType.toUpperCase()) {
             case VerbaMetricsConstants.K_SENTIMENT -> trainSentimentModel(trainingData, parameters);
             case VerbaMetricsConstants.K_CLASSIFICATION -> trainClassificationModel(trainingData, parameters);
-            case VerbaMetricsConstants.K_TOPIC_MODELING -> trainTopicModelingModel(trainingData, parameters);
+            case VerbaMetricsConstants.K_TOPIC_MODELING ->
+                    throw new UnsupportedOperationException("Topic modeling not implemented yet");
             default -> throw new IllegalArgumentException("Unsupported model type: " + modelType);
         };
     }
@@ -162,7 +165,8 @@ public class ModelTrainingEngine {
     }
 
     /**
-     * Trains a sentiment analysis model using Smile library.
+     * Trains a sentiment analysis model using Weka RandomTree.
+     * Uses only numeric features for training, ignoring text attributes.
      *
      * @param trainingData The training dataset
      * @param parameters   The training parameters
@@ -170,15 +174,22 @@ public class ModelTrainingEngine {
      * @throws Exception if training fails
      */
     private Object trainSentimentModel(List<Map<String, Object>> trainingData, Map<String, Object> parameters) throws Exception {
-        LOGGER.debug("Training sentiment model with {} data points", trainingData.size());
         Instances dataset = createWekaDataset(trainingData);
+        Instances numericDataset = new Instances(dataset);
+        // Remove text attribute (index 0) as RandomTree works only with numeric features
+        numericDataset.deleteAttributeAt(0);
         RandomTree model = new RandomTree();
-        model.buildClassifier(dataset);
+        // Add dataset size to parameters for adaptive configuration
+        Map<String, Object> adaptiveParams = new HashMap<>(parameters);
+        adaptiveParams.put("datasetSize", trainingData.size());
+        configureRandomTreeModel(model, adaptiveParams);
+        model.buildClassifier(numericDataset);
         return model;
     }
 
     /**
      * Trains a general classification model using Weka library.
+     * Uses only numeric features for training, ignoring text attributes.
      *
      * @param trainingData The training dataset
      * @param parameters   The training parameters
@@ -186,29 +197,50 @@ public class ModelTrainingEngine {
      * @throws Exception if training fails
      */
     private Object trainClassificationModel(List<Map<String, Object>> trainingData, Map<String, Object> parameters) throws Exception {
-        LOGGER.debug("Training classification model with {} data points", trainingData.size());
         Instances dataset = createWekaDataset(trainingData);
-        Classifier classifier = new RandomTree();
-        classifier.buildClassifier(dataset);
+        Instances numericDataset = new Instances(dataset);
+        // Remove text attribute (index 0) as RandomTree works only with numeric features
+        numericDataset.deleteAttributeAt(0);
+        RandomTree classifier = new RandomTree();
+        // Add dataset size to parameters for adaptive configuration
+        Map<String, Object> adaptiveParams = new HashMap<>(parameters);
+        adaptiveParams.put("datasetSize", trainingData.size());
+        configureRandomTreeModel(classifier, adaptiveParams);
+        classifier.buildClassifier(numericDataset);
         return classifier;
     }
 
     /**
-     * Trains a topic modeling (placeholder for future implementation).
-     *
-     * @throws UnsupportedOperationException since topic modeling is not implemented yet
-     */
-    private Object trainTopicModelingModel(List<Map<String, Object>> trainingData, Map<String, Object> parameters) throws Exception {
-        LOGGER.debug("Training topic modeling model with {} data points", trainingData.size());
-        // TODO: Implement topic modeling with appropriate library
-        throw new UnsupportedOperationException("Topic modeling not implemented yet");
-    }
-
-    /**
      * Creates a Weka dataset from training data.
+     *
+     * @param trainingData The training dataset
+     * @return The Weka Instances object
      */
     private Instances createWekaDataset(List<Map<String, Object>> trainingData) {
         return WekaDatasetUtils.createDataset(trainingData, "ClassificationDataset");
+    }
+
+    /**
+     * Stores class values for a model based on training data.
+     *
+     * @param modelId      The model ID
+     * @param trainingData The training data
+     */
+    private void storeClassValuesForModel(String modelId, List<Map<String, Object>> trainingData) {
+        try {
+            Set<String> uniqueClasses = new LinkedHashSet<>();
+            for (Map<String, Object> dataPoint : trainingData) {
+                Object label = dataPoint.get("label");
+                if (label instanceof String) {
+                    uniqueClasses.add((String) label);
+                }
+            }
+            List<String> classValues = new ArrayList<>(uniqueClasses);
+            classValueManager.storeClassValues(modelId, classValues);
+            LOGGER.debug("Stored class values for model {} ({} classes)", modelId, classValues.size());
+        } catch (Exception e) {
+            LOGGER.warn("Failed to store class values for model {}: {}", modelId, e.getMessage());
+        }
     }
 
     /**
@@ -220,7 +252,6 @@ public class ModelTrainingEngine {
      * @return A map of performance metrics
      */
     private Map<String, Object> calculatePerformanceMetrics(Object model, List<Map<String, Object>> trainingData, String modelType) {
-        // Real performance calculation using Weka's evaluation
         double accuracy = calculateModelAccuracy(model, trainingData);
         double precision = calculatePrecision(model, trainingData);
         double recall = calculateRecall(model, trainingData);
@@ -236,6 +267,50 @@ public class ModelTrainingEngine {
     }
 
     /**
+     * Configures a RandomTree model with parameters from configuration.
+     * Uses adaptive settings based on dataset size to prevent overfitting.
+     *
+     * @param model      The RandomTree model to configure
+     * @param parameters The training parameters
+     */
+    private void configureRandomTreeModel(RandomTree model, Map<String, Object> parameters) {
+        try {
+            // Adaptive defaults based on dataset size
+            int datasetSize = parameters.containsKey("datasetSize") ? (Integer) parameters.get("datasetSize") : 100;
+            // Adjust depth based on dataset size
+            int maxDepth = datasetSize < 20 ? 3 : (datasetSize < 50 ? 5 : 8);
+            int minNum = datasetSize < 20 ? 2 : 1;
+            model.setMaxDepth(maxDepth);
+            model.setMinNum(minNum);
+            model.setSeed(42);
+            if (parameters.containsKey(VerbaMetricsConstants.PARAM_MAX_DEPTH)) {
+                int paramMaxDepth = (Integer) parameters.get(VerbaMetricsConstants.PARAM_MAX_DEPTH);
+                if (paramMaxDepth > 0) {
+                    model.setMaxDepth(Math.min(paramMaxDepth, maxDepth));
+                }
+            }
+            if (parameters.containsKey(VerbaMetricsConstants.PARAM_MIN_SAMPLES_SPLIT)) {
+                int minSamplesSplit = (Integer) parameters.get(VerbaMetricsConstants.PARAM_MIN_SAMPLES_SPLIT);
+                if (minSamplesSplit > 0) {
+                    model.setMinNum(Math.max(minSamplesSplit, minNum));
+                }
+            }
+            if (parameters.containsKey(VerbaMetricsConstants.PARAM_MIN_SAMPLES_LEAF)) {
+                int minSamplesLeaf = (Integer) parameters.get(VerbaMetricsConstants.PARAM_MIN_SAMPLES_LEAF);
+                if (minSamplesLeaf > 0) {
+                    model.setMinVarianceProp(minSamplesLeaf / 100.0);
+                }
+            }
+            if (parameters.containsKey(VerbaMetricsConstants.PARAM_RANDOM_STATE)) {
+                int randomState = (Integer) parameters.get(VerbaMetricsConstants.PARAM_RANDOM_STATE);
+                model.setSeed(randomState);
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to configure RandomTree model, using defaults", e);
+        }
+    }
+
+    /**
      * Calculates model accuracy using Weka's cross-validation.
      *
      * @param model        The trained model
@@ -246,16 +321,20 @@ public class ModelTrainingEngine {
         if (model instanceof Classifier) {
             try {
                 Instances dataset = createWekaDataset(trainingData);
-                // Use Weka's cross-validation for real accuracy
-                weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(dataset);
-                evaluation.crossValidateModel((Classifier) model, dataset, 5, new java.util.Random(1));
+                Instances numericDataset = new Instances(dataset);
+                // Remove text attribute (index 0) as RandomTree works only with numeric features
+                numericDataset.deleteAttributeAt(0);
+                weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
+                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
                 return evaluation.pctCorrect() / 100.0;
             } catch (Exception e) {
                 LOGGER.warn("Failed to calculate model accuracy with cross-validation", e);
-                return 0.75; // Conservative fallback
+                Double fallbackAccuracy = properties.getPerformanceThresholds().get("min-accuracy");
+                return fallbackAccuracy != null ? fallbackAccuracy : 0.6;
             }
         }
-        return 0.80; // Default accuracy
+        Double fallbackAccuracy = properties.getPerformanceThresholds().get("min-accuracy");
+        return fallbackAccuracy != null ? fallbackAccuracy : 0.6;
     }
 
     /**
@@ -269,15 +348,20 @@ public class ModelTrainingEngine {
         if (model instanceof Classifier) {
             try {
                 Instances dataset = createWekaDataset(trainingData);
-                weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(dataset);
-                evaluation.crossValidateModel((Classifier) model, dataset, 5, new java.util.Random(1));
+                Instances numericDataset = new Instances(dataset);
+                // Remove text attribute (index 0) as RandomTree works only with numeric features
+                numericDataset.deleteAttributeAt(0);
+                weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
+                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
                 return evaluation.precision(0);
             } catch (Exception e) {
                 LOGGER.warn("Failed to calculate precision", e);
-                return 0.80; // Conservative fallback
+                Double fallbackPrecision = properties.getPerformanceThresholds().get("min-precision");
+                return fallbackPrecision != null ? fallbackPrecision : 0.6;
             }
         }
-        return 0.80; // Default precision
+        Double fallbackPrecision = properties.getPerformanceThresholds().get("min-precision");
+        return fallbackPrecision != null ? fallbackPrecision : 0.6;
     }
 
     /**
@@ -291,15 +375,20 @@ public class ModelTrainingEngine {
         if (model instanceof Classifier) {
             try {
                 Instances dataset = createWekaDataset(trainingData);
-                weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(dataset);
-                evaluation.crossValidateModel((Classifier) model, dataset, 5, new java.util.Random(1));
+                Instances numericDataset = new Instances(dataset);
+                // Remove text attribute (index 0) as RandomTree works only with numeric features
+                numericDataset.deleteAttributeAt(0);
+                weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
+                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
                 return evaluation.recall(0);
             } catch (Exception e) {
                 LOGGER.warn("Failed to calculate recall", e);
-                return 0.80; // Conservative fallback
+                Double fallbackRecall = properties.getPerformanceThresholds().get("min-recall");
+                return fallbackRecall != null ? fallbackRecall : 0.6;
             }
         }
-        return 0.80; // Default recall
+        Double fallbackRecall = properties.getPerformanceThresholds().get("min-recall");
+        return fallbackRecall != null ? fallbackRecall : 0.6;
     }
 
 }

@@ -12,11 +12,11 @@ import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
- * Manager for ML model file operations.
- * Handles saving, loading, and managing model files on disk.
+ * Manager for handling model file operations such as saving and loading up model files.
  *
  * @author Kapil Garg
  */
@@ -49,7 +49,6 @@ public class ModelFileManager {
             try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(filePath))) {
                 oos.writeObject(model);
             }
-            LOGGER.debug("Model saved to file: {}", filePath);
         } catch (IOException e) {
             LOGGER.error("Failed to save model to file: {}", modelId, e);
             throw new RuntimeException("Failed to save model to file: " + e.getMessage(), e);
@@ -68,58 +67,16 @@ public class ModelFileManager {
             String filePath = getModelFilePath(modelId);
             Path path = Paths.get(filePath);
             if (!Files.exists(path)) {
-                LOGGER.debug("Model file not found: {}", filePath);
+                LOGGER.debug("Model file not found for model: {}", modelId);
                 return Optional.empty();
             }
             try (ObjectInputStream ois = new ObjectInputStream(Files.newInputStream(path))) {
                 Object model = ois.readObject();
-                LOGGER.debug("Model loaded from file: {}", filePath);
                 return Optional.of(model);
             }
         } catch (Exception e) {
             LOGGER.error("Failed to load model from file: {}", modelId, e);
             return Optional.empty();
-        }
-    }
-
-    /**
-     * Deletes a model file.
-     *
-     * @param modelId the model ID
-     * @return true if the file was deleted successfully
-     */
-    public boolean deleteModelFile(String modelId) {
-        Objects.requireNonNull(modelId, "Model ID cannot be null");
-        try {
-            String filePath = getModelFilePath(modelId);
-            Path path = Paths.get(filePath);
-            if (Files.exists(path)) {
-                Files.delete(path);
-                LOGGER.debug("Model file deleted: {}", filePath);
-                return true;
-            }
-            LOGGER.debug("Model file not found for deletion: {}", filePath);
-            return false;
-        } catch (IOException e) {
-            LOGGER.error("Failed to delete model file: {}", modelId, e);
-            return false;
-        }
-    }
-
-    /**
-     * Checks if a model file exists.
-     *
-     * @param modelId the model ID
-     * @return true if the model file exists
-     */
-    public boolean modelFileExists(String modelId) {
-        Objects.requireNonNull(modelId, "Model ID cannot be null");
-        try {
-            String filePath = getModelFilePath(modelId);
-            return Files.exists(Paths.get(filePath));
-        } catch (Exception e) {
-            LOGGER.error("Failed to check if model file exists: {}", modelId, e);
-            return false;
         }
     }
 
@@ -135,56 +92,6 @@ public class ModelFileManager {
         String format = properties.getFileSettings().getOrDefault("format", "json");
         String fileName = modelId + "." + format;
         return Paths.get(basePath, fileName).toString();
-    }
-
-    /**
-     * Lists all model files.
-     *
-     * @return list of model file paths
-     */
-    public List<String> listModelFiles() {
-        String basePath = properties.getFileSettings().getOrDefault("base-path", "/models");
-        Path baseDir = Paths.get(basePath);
-        if (!Files.exists(baseDir)) {
-            return new ArrayList<>();
-        }
-        try (var stream = Files.list(baseDir)) {
-            return stream
-                    .filter(Files::isRegularFile)
-                    .map(Path::toString)
-                    .toList();
-        } catch (IOException e) {
-            LOGGER.error("Failed to list model files", e);
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Gets model file statistics.
-     *
-     * @param modelId the model ID
-     * @return file statistics map
-     */
-    public Map<String, Object> getModelFileStatistics(String modelId) {
-        Objects.requireNonNull(modelId, "Model ID cannot be null");
-        Map<String, Object> stats = new HashMap<>();
-        try {
-            String filePath = getModelFilePath(modelId);
-            Path path = Paths.get(filePath);
-            if (Files.exists(path)) {
-                stats.put("exists", true);
-                stats.put("filePath", filePath);
-                stats.put("fileSize", Files.size(path));
-                stats.put("lastModified", Files.getLastModifiedTime(path));
-            } else {
-                stats.put("exists", false);
-                stats.put("filePath", filePath);
-            }
-        } catch (IOException e) {
-            LOGGER.error("Failed to get model file statistics: {}", modelId, e);
-            stats.put("error", e.getMessage());
-        }
-        return stats;
     }
 
 }
