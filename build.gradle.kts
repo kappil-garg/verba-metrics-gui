@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.kapil"
-version = "0.0.1"
+version = "1.0.0"
 description = "Verba Metrics GUI"
 
 java {
