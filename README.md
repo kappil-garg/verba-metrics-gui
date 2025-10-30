@@ -7,7 +7,7 @@
 ![Gradle](https://img.shields.io/badge/Build-Gradle-007396?logo=gradle&logoColor=white)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20macOS%20%7C%20Linux-8B5CF6)
 
-Advanced desktop application for sentiment analysis, readability assessment, and machine learning model training — built with Spring Boot 3 and Java Swing.
+Advanced desktop application for sentiment analysis, readability assessment, and machine learning model training, built with Spring Boot 3 and Java Swing.
 
 This README gives you the essentials to install, build, run, and use the app. For deeper documentation (architecture, algorithms, user guide), see the GitHub Wiki:
 
@@ -95,7 +95,7 @@ Add `--icon path\to\icon.ico` if you have an icon.
 1) Launch the app
 2) Text Analysis tab:
    - Paste or load text
-   - Click Analyze to see: basic stats, sentiment, and readability (FRE is reported on a 0–100 scale; out‑of‑range values are clamped)
+   - Click Analyze to see: basic stats, sentiment, and readability (FRE is reported on a 0–100 scale; out-of-range values are clamped)
 3) ML Model tab:
    - Prepare a small sample dataset (see below)
    - Train a model (RandomTree)
@@ -115,7 +115,7 @@ Training data format (example JSON lines mapped by the UI to a tabular set of nu
 
 Steps:
 - Provide a list of entries like above (the UI converts to a Weka dataset and strips the text column for RandomTree)
-- Click Train → model is built and stored; evaluation shows accuracy/precision/recall/F1 via 5‑fold cross‑validation
+- Click Train → model is built and stored; evaluation shows accuracy/precision/recall/F1 via 5-fold cross-validation
 - Click Predict → enter a new `text` and `features`; the app returns `prediction`, `probability`, and a calibrated `confidence`
 
 ## Configuration
