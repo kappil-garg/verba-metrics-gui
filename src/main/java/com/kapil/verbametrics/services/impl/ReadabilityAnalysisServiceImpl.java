@@ -8,6 +8,8 @@ import com.kapil.verbametrics.services.calculators.SentenceLengthCalculator;
 import com.kapil.verbametrics.services.calculators.SyllablePerWordCalculator;
 import com.kapil.verbametrics.services.classifiers.ComplexityClassifier;
 import com.kapil.verbametrics.services.classifiers.ReadingLevelClassifier;
+import com.kapil.verbametrics.util.VerbaMetricsConstants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +85,7 @@ public class ReadabilityAnalysisServiceImpl implements ReadabilityAnalysisServic
         double fleschKincaidScore = fleschKincaidCalculator.calculateScore(averageSentenceLength, averageSyllablesPerWord);
         double fleschReadingEaseRaw = fleschReadingEaseCalculator.calculateScore(averageSentenceLength, averageSyllablesPerWord);
         // Clamp FRE to [0, 100] for reporting/validation consistency
-        double fleschReadingEase = Math.max(0.0, Math.min(100.0, fleschReadingEaseRaw));
+        double fleschReadingEase = Math.max(VerbaMetricsConstants.FLESCH_READING_EASE_MIN, Math.min(VerbaMetricsConstants.FLESCH_READING_EASE_MAX, fleschReadingEaseRaw));
         String readingLevel = readingLevelClassifier.determineReadingLevel(fleschKincaidScore);
         String complexity = includeComplexity ? complexityClassifier.determineComplexity(fleschReadingEase) : "Unknown";
         return new ReadabilityMetrics(
