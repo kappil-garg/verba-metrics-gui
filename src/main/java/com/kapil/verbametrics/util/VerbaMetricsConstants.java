@@ -62,4 +62,8 @@ public final class VerbaMetricsConstants {
     public static final String PARAM_MIN_SAMPLES_SPLIT = "min-samples-split";
     public static final String PARAM_MIN_SAMPLES_LEAF = "min-samples-leaf";
 
+    // Flesch Reading Ease Constants
+    public static final double FLESCH_READING_EASE_MIN = 0.0;
+    public static final double FLESCH_READING_EASE_MAX = 100.0;
+
 }
