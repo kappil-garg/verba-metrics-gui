@@ -81,7 +81,9 @@ public class ReadabilityAnalysisServiceImpl implements ReadabilityAnalysisServic
         double averageSentenceLength = sentenceLengthCalculator.calculateAverageSentenceLength(text);
         double averageSyllablesPerWord = syllablePerWordCalculator.calculateAverageSyllablesPerWord(text);
         double fleschKincaidScore = fleschKincaidCalculator.calculateScore(averageSentenceLength, averageSyllablesPerWord);
-        double fleschReadingEase = fleschReadingEaseCalculator.calculateScore(averageSentenceLength, averageSyllablesPerWord);
+        double fleschReadingEaseRaw = fleschReadingEaseCalculator.calculateScore(averageSentenceLength, averageSyllablesPerWord);
+        // Clamp FRE to [0, 100] for reporting/validation consistency
+        double fleschReadingEase = Math.max(0.0, Math.min(100.0, fleschReadingEaseRaw));
         String readingLevel = readingLevelClassifier.determineReadingLevel(fleschKincaidScore);
         String complexity = includeComplexity ? complexityClassifier.determineComplexity(fleschReadingEase) : "Unknown";
         return new ReadabilityMetrics(
