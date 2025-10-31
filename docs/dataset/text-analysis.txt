@@ -12,7 +12,7 @@ The weather today remained fairly consistent with mild temperatures and light wi
 ## Neutral Statement
 The report was submitted on time and reviewed by the management team. A few changes were suggested, and those are being implemented in the next version. There were neither significant issues nor major praises. Everything proceeded as part of the standard workflow.
 
-#Neutral Statement
+## Neutral Statement
 The maintenance window proceeded as scheduled, with services placed in read-only mode during the operation. Routine patches were applied and system configurations were validated against the deployment checklist. Logs showed expected activity levels, and monitoring alerts remained quiet.
 
 ## Negative Statement

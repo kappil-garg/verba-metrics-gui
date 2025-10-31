@@ -44,29 +44,28 @@ public class SentimentCalculationEngine {
         if (text == null || text.isBlank()) {
             return 0.0;
         }
-        var tokens = tokenize(text);
+        String normalized = getNormalizedString(text);
+        var tokens = tokenizeFromNormalized(normalized);
         var totalWords = (int) Arrays.stream(tokens).filter(token -> !token.isBlank()).count();
         if (totalWords == 0) {
             return 0.0;
         }
         double phraseAdjustment = calculatePhraseAdjustments(text);
-        double weightedSum = calculateWeightedSentiment(text, tokens) + phraseAdjustment;
+        double weightedSum = calculateWeightedSentimentNormalized(normalized) + phraseAdjustment;
         double denominator = Math.sqrt(weightedSum * weightedSum + ruleProperties.getNormalizationAlpha());
         return denominator > 0 ? weightedSum / denominator : 0.0;
     }
 
     /**
-     * Tokenizes the input text based on the configured word separator and case sensitivity.
-     * Handles contractions properly by preserving them as single tokens.
+     * Splits already-normalized text into tokens based on the configured word separator.
      *
-     * @param text the text to tokenize
+     * @param normalized already-normalized text
      * @return an array of tokens
      */
-    private String[] tokenize(String text) {
-        if (text == null || text.isBlank()) {
+    private String[] tokenizeFromNormalized(String normalized) {
+        if (normalized == null || normalized.isBlank()) {
             return new String[0];
         }
-        String normalized = getNormalizedString(text);
         String[] tokens = normalized.split(analysisProperties.getTextProcessing().getWordSeparator());
         for (int i = 0; i < tokens.length; i++) {
             tokens[i] = tokens[i].replace(VerbaMetricsConstants.APOSTROPHE_PLACEHOLDER, "'");
@@ -96,24 +95,20 @@ public class SentimentCalculationEngine {
     }
 
     /**
-     * Calculates a weighted sentiment sum using negation and intensity heuristics.
-     * Positive words contribute +1, negative words -1, modified by nearby intensifiers/diminishers.
+     * Calculates a weighted sentiment sum from normalized text.
      * Processes text sentence by sentence to properly reset context at sentence boundaries.
      *
-     * @param rawText the original input text (for sentence boundary detection)
-     * @param tokens  the tokenized input text
+     * @param normalizedText the normalized input text
      * @return the weighted sentiment sum
      */
-    private double calculateWeightedSentiment(String rawText, String[] tokens) {
+    private double calculateWeightedSentimentNormalized(String normalizedText) {
         var positiveWords = wordListService.getPositiveWords();
         var negativeWords = wordListService.getNegativeWords();
-        // Split into sentences and process each separately to reset context properly
-        String[] sentences = splitIntoSentences(rawText);
+        String[] sentences = splitIntoSentences(normalizedText);
         double sum = 0.0;
         for (String sentence : sentences) {
             if (sentence == null || sentence.isBlank()) continue;
-            // Tokenize each sentence separately
-            String[] sentenceTokens = tokenize(sentence);
+            String[] sentenceTokens = tokenizeFromNormalized(sentence);
             SentimentContext context = new SentimentContext();
             for (int i = 0; i < sentenceTokens.length; i++) {
                 String token = sentenceTokens[i];
