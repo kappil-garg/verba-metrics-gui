@@ -1,0 +1,21 @@
+{"text":"The proposed algorithm improves classification accuracy on benchmarks.","features":[0.81,0.06,0.13],"label":"academic"}
+{"text":"We present a novel approach for text segmentation using graphs.","features":[0.80,0.07,0.13],"label":"academic"}
+{"text":"This study reports significant gains in precision and recall.","features":[0.78,0.08,0.14],"label":"academic"}
+{"text":"Experimental results demonstrate robust generalization across datasets.","features":[0.79,0.07,0.14],"label":"academic"}
+{"text":"A comparative analysis of feature encodings is provided.","features":[0.77,0.08,0.15],"label":"academic"}
+{"text":"Our findings indicate improved convergence and stability.","features":[0.82,0.06,0.12],"label":"academic"}
+{"text":"We evaluate ablation settings to isolate contributions.","features":[0.76,0.09,0.15],"label":"academic"}
+{"text":"The government announced a new economic stimulus package.","features":[0.24,0.66,0.10],"label":"news"}
+{"text":"International markets reacted to the central bank decision.","features":[0.26,0.64,0.10],"label":"news"}
+{"text":"Local authorities reported upgrades to public infrastructure.","features":[0.25,0.65,0.10],"label":"news"}
+{"text":"Elections coverage highlights voter turnout trends.","features":[0.27,0.63,0.10],"label":"news"}
+{"text":"Tech firms unveiled quarterly earnings beating expectations.","features":[0.28,0.62,0.10],"label":"news"}
+{"text":"New education policy aims to improve outcomes nationwide.","features":[0.26,0.64,0.10],"label":"news"}
+{"text":"Health ministry updates guidance amid seasonal flu surge.","features":[0.25,0.65,0.10],"label":"news"}
+{"text":"The team secured a decisive victory in the final.","features":[0.14,0.19,0.67],"label":"sports"}
+{"text":"The striker scored two late goals to win the game.","features":[0.13,0.18,0.69],"label":"sports"}
+{"text":"Training intensity increased before the championship.","features":[0.15,0.21,0.64],"label":"sports"}
+{"text":"The defense held firm to keep a clean sheet.","features":[0.13,0.19,0.68],"label":"sports"}
+{"text":"Injury updates ahead of the weekend fixtures.","features":[0.16,0.21,0.63],"label":"sports"}
+{"text":"The underdogs upset the favorites in overtime.","features":[0.12,0.18,0.70],"label":"sports"}
+{"text":"Coaches praised the squad's work ethic.","features":[0.15,0.20,0.65],"label":"sports"}

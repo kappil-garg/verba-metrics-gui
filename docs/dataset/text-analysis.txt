@@ -1,0 +1,25 @@
+# Text Analysis Dataset to test basic stats, sentiment and readability analysis
+
+## Positive Statement
+The new project launch exceeded everyone’s expectations. The team worked tirelessly, and the results were absolutely fantastic. Customers responded with overwhelming enthusiasm, and the feedback has been glowing across all channels. It truly feels like all our efforts have paid off beautifully.
+
+## Positive Statement
+The movie was quite enjoyable, though not without its flaws. The performances were sincere, and the music added a pleasant charm. While the pacing could have been better, the story left a warm impression. Overall, it was a good experience worth recommending.
+
+## Mildly Positive Statement
+The weather today remained fairly consistent with mild temperatures and light winds. Traffic moved smoothly in most areas except for the downtown junction. Shops opened as usual, and public transport maintained its regular schedule. Nothing particularly noteworthy occurred throughout the day.
+
+## Neutral Statement
+The report was submitted on time and reviewed by the management team. A few changes were suggested, and those are being implemented in the next version. There were neither significant issues nor major praises. Everything proceeded as part of the standard workflow.
+
+#Neutral Statement
+The maintenance window proceeded as scheduled, with services placed in read-only mode during the operation. Routine patches were applied and system configurations were validated against the deployment checklist. Logs showed expected activity levels, and monitoring alerts remained quiet.
+
+## Negative Statement
+The meeting dragged on much longer than necessary, with no clear decisions made. Several participants seemed unprepared, which led to repetitive discussions. By the end, most people appeared frustrated and mentally exhausted. It felt like a complete waste of time and energy.
+
+## Negative Statement
+The product update was a total disappointment. The new version introduced more bugs than it fixed, and performance has drastically worsened. Users are complaining across forums, and customer support seems overwhelmed. It’s hard to believe this release even passed basic testing.
+
+## Mixed Sentiment Statement (Both Positive & Negative)
+The restaurant had an elegant ambience, and the staff were genuinely polite. However, the food was served late, and a few dishes were cold by the time they arrived. The desserts redeemed the experience a bit, but overall it left me conflicted — pleasant atmosphere, average food.

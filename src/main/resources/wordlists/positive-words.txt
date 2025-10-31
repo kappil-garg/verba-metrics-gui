@@ -120,6 +120,12 @@ unique
 special
 rare
 worthwhile
+pleasant
+sincere
+warm
+recommend
+recommending
+charm
 beneficial
 advantageous
 profitable
