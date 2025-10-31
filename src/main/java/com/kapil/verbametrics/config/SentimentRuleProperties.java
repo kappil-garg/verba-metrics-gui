@@ -40,19 +40,26 @@ public class SentimentRuleProperties {
             Map.entry("mildly", -0.25),
             Map.entry("rather", -0.20),
             Map.entry("fairly", -0.20),
-            Map.entry("kinda", -0.20)
+            Map.entry("kinda", -0.20),
+            Map.entry("quite", -0.15),
+            Map.entry("average", -0.10)
     );
 
     private List<String> punctuationBreaks = List.of(".", "!", "?", ",", ";", ":");
 
     private List<String> contrastives = List.of("but", "however", "though", "yet");
 
-    private Map<String, Double> phrases = Map.of(
-            "waste of time", -1.5,
-            "poorly communicated", -1.0,
-            "customer support unresponsive", -1.2,
-            "fell apart", -1.2,
-            "not good", -0.8
+    private Map<String, Double> phrases = Map.ofEntries(
+            Map.entry("waste of time", -1.5),
+            Map.entry("poorly communicated", -1.0),
+            Map.entry("customer support unresponsive", -1.2),
+            Map.entry("fell apart", -1.2),
+            Map.entry("not good", -0.8),
+            Map.entry("worth recommending", 0.6),
+            Map.entry("hard to believe", -0.8),
+            Map.entry("total disappointment", -1.5),
+            Map.entry("more bugs than it fixed", -1.3),
+            Map.entry("performance has drastically worsened", -1.4)
     );
 
     private int negationWindow = 3;

@@ -1,0 +1,7 @@
+{
+    "samples": [
+      {"text":"Super happy with the performance!","features":[0.82,0.08,0.10]},
+      {"text":"It is fine, does the job.","features":[0.45,0.25,0.30]},
+      {"text":"Really bad experience overall.","features":[0.10,0.85,0.05]}
+    ]
+}

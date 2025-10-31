@@ -44,29 +44,28 @@ public class SentimentCalculationEngine {
         if (text == null || text.isBlank()) {
             return 0.0;
         }
-        var tokens = tokenize(text);
+        String normalized = getNormalizedString(text);
+        var tokens = tokenizeFromNormalized(normalized);
         var totalWords = (int) Arrays.stream(tokens).filter(token -> !token.isBlank()).count();
         if (totalWords == 0) {
             return 0.0;
         }
         double phraseAdjustment = calculatePhraseAdjustments(text);
-        double weightedSum = calculateWeightedSentiment(tokens) + phraseAdjustment;
+        double weightedSum = calculateWeightedSentimentNormalized(normalized) + phraseAdjustment;
         double denominator = Math.sqrt(weightedSum * weightedSum + ruleProperties.getNormalizationAlpha());
         return denominator > 0 ? weightedSum / denominator : 0.0;
     }
 
     /**
-     * Tokenizes the input text based on the configured word separator and case sensitivity.
-     * Handles contractions properly by preserving them as single tokens.
+     * Splits already-normalized text into tokens based on the configured word separator.
      *
-     * @param text the text to tokenize
+     * @param normalized already-normalized text
      * @return an array of tokens
      */
-    private String[] tokenize(String text) {
-        if (text == null || text.isBlank()) {
+    private String[] tokenizeFromNormalized(String normalized) {
+        if (normalized == null || normalized.isBlank()) {
             return new String[0];
         }
-        String normalized = getNormalizedString(text);
         String[] tokens = normalized.split(analysisProperties.getTextProcessing().getWordSeparator());
         for (int i = 0; i < tokens.length; i++) {
             tokens[i] = tokens[i].replace(VerbaMetricsConstants.APOSTROPHE_PLACEHOLDER, "'");
@@ -96,27 +95,53 @@ public class SentimentCalculationEngine {
     }
 
     /**
-     * Calculates a weighted sentiment sum using negation and intensity heuristics.
-     * Positive words contribute +1, negative words -1, modified by nearby intensifiers/diminishers.
+     * Calculates a weighted sentiment sum from normalized text.
+     * Processes text sentence by sentence to properly reset context at sentence boundaries.
      *
-     * @param tokens the tokenized input text
+     * @param normalizedText the normalized input text
      * @return the weighted sentiment sum
      */
-    private double calculateWeightedSentiment(String[] tokens) {
+    private double calculateWeightedSentimentNormalized(String normalizedText) {
         var positiveWords = wordListService.getPositiveWords();
         var negativeWords = wordListService.getNegativeWords();
-        SentimentContext context = new SentimentContext();
+        String[] sentences = splitIntoSentences(normalizedText);
         double sum = 0.0;
-        for (int i = 0; i < tokens.length; i++) {
-            String token = tokens[i];
-            if (token.isBlank()) continue;
-            if (handleSpecialTokens(token, i, tokens, context)) {
-                continue;
+        for (String sentence : sentences) {
+            if (sentence == null || sentence.isBlank()) continue;
+            String[] sentenceTokens = tokenizeFromNormalized(sentence);
+            SentimentContext context = new SentimentContext();
+            for (int i = 0; i < sentenceTokens.length; i++) {
+                String token = sentenceTokens[i];
+                if (token.isBlank()) {
+                    continue;
+                }
+                if (handleSpecialTokens(token, i, sentenceTokens, context)) {
+                    continue;
+                }
+                double contribution = processSentimentToken(token, i, sentenceTokens, positiveWords, negativeWords, context);
+                sum += contribution;
             }
-            double contribution = processSentimentToken(token, i, tokens, positiveWords, negativeWords, context);
-            sum += contribution;
         }
         return sum;
+    }
+
+    /**
+     * Splits text into sentences based on sentence-ending punctuation.
+     * Sentence boundaries are periods, exclamation marks, or question marks followed by whitespace or end of text.
+     *
+     * @param text the text to split
+     * @return array of sentences
+     */
+    private String[] splitIntoSentences(String text) {
+        if (text == null || text.isBlank()) {
+            return new String[]{text};
+        }
+        // Split on sentence-ending punctuation followed by whitespace or end of string
+        // This regex matches: sentence-ending punctuation (. ! ?) followed by optional whitespace
+        String[] sentences = text.split("(?<=[.!?])\\s+");
+        return Arrays.stream(sentences)
+                .filter(s -> s != null && !s.trim().isBlank())
+                .toArray(String[]::new);
     }
 
     /**
@@ -188,7 +213,14 @@ public class SentimentCalculationEngine {
      * @param context the sentiment context
      */
     private void updateNegationState(String token, int index, String[] tokens, SentimentContext context) {
+        // Handle "not only" - this doesn't create negation
         if ("not".equals(token) && index + 1 < tokens.length && "only".equals(tokens[index + 1])) {
+            context.negationActive = false;
+            context.negationWindow = 0;
+            return;
+        }
+        // Handle "not without" - this is a litotes (double negative = positive), so cancel negation
+        if ("not".equals(token) && index + 1 < tokens.length && "without".equals(tokens[index + 1])) {
             context.negationActive = false;
             context.negationWindow = 0;
             return;
@@ -252,7 +284,7 @@ public class SentimentCalculationEngine {
         }
         if (modifier < 0.0) modifier = 0.0;
         if (context.afterContrastive) {
-            modifier *= 1.5;
+            modifier *= 1.2;  // Reduced from 1.5 to avoid overconfidence in mixed sentiment texts
             if (context.contrastiveCountdown > 0) {
                 context.contrastiveCountdown--;
                 if (context.contrastiveCountdown == 0) {

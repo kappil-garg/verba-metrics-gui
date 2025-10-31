@@ -79,7 +79,7 @@ public class SentimentAnalysisServiceImpl implements SentimentAnalysisService {
         int totalWords = Math.max(1, text.split("\\s+").length);
         double scoreMagnitude = Math.abs(score);
         double sentimentConfidence = Math.min(0.9, 0.1 + (scoreMagnitude * 0.8));
-        double lengthFactor = Math.min(1.0, 0.3 + (totalWords / 15.0));
+        double lengthFactor = Math.min(0.8, 0.3 + (totalWords / 15.0));
         double finalConfidence = sentimentConfidence * lengthFactor;
         return Math.max(0.1, Math.min(0.95, finalConfidence));
     }
