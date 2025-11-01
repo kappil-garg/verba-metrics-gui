@@ -9,7 +9,6 @@ import com.kapil.verbametrics.services.calculators.SyllablePerWordCalculator;
 import com.kapil.verbametrics.services.classifiers.ComplexityClassifier;
 import com.kapil.verbametrics.services.classifiers.ReadingLevelClassifier;
 import com.kapil.verbametrics.util.VerbaMetricsConstants;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

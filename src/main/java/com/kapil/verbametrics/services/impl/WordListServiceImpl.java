@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -116,9 +117,9 @@ public class WordListServiceImpl implements WordListService {
      * @param caseInsensitive whether to treat words case-insensitively
      * @return a set of processed words
      */
-    private java.util.Set<String> toProcessedSet(java.util.List<String> words, boolean caseInsensitive) {
+    private Set<String> toProcessedSet(List<String> words, boolean caseInsensitive) {
         Function<String, String> normalizer = caseInsensitive
-                ? s -> s.toLowerCase(java.util.Locale.ROOT)
+                ? s -> s.toLowerCase(Locale.ROOT)
                 : s -> s;
         Set<String> result = ConcurrentHashMap.newKeySet();
         words.stream()

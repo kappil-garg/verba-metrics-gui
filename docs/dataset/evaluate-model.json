@@ -1,0 +1,8 @@
+[
+  {"text":"Installation process went smoothly with perfect results.","features":[0.85,0.06,0.09],"label":"positive"},
+  {"text":"Absolutely thrilled with the outstanding performance achieved.","features":[0.88,0.05,0.07],"label":"positive"},
+  {"text":"Completely unacceptable quality that needs immediate replacement.","features":[0.04,0.92,0.04],"label":"negative"},
+  {"text":"Extremely dissatisfied with numerous critical issues encountered.","features":[0.06,0.91,0.03],"label":"negative"},
+  {"text":"The product functions as expected without major concerns.","features":[0.44,0.27,0.29],"label":"neutral"},
+  {"text":"Average performance meets standard requirements adequately.","features":[0.42,0.29,0.29],"label":"neutral"}
+]

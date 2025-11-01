@@ -11,7 +11,9 @@ Advanced desktop application for sentiment analysis, readability assessment, and
 
 This README gives you the essentials to install, build, run, and use the app. For deeper documentation (architecture, algorithms, user guide), see the GitHub Wiki:
 
-Wiki: https://github.com/kappil-garg/verba-metrics-gui/wiki
+**📖 Documentation:**
+- 📗 [GitHub Wiki](https://github.com/kappil-garg/verba-metrics-gui/wiki) for Getting started
+- 📸 **[Screenshots & Examples](screenshots.md)** for Visual demonstrations and workflows
 
 ---
 
