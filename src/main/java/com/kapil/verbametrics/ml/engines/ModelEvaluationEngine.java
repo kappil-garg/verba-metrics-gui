@@ -126,12 +126,7 @@ public class ModelEvaluationEngine {
         double f1Score = MetricsCalculationUtils.calculateF1Score(precision, recall);
         double auc = evaluation.areaUnderROC(0);
         double[][] confusionMatrix = evaluation.confusionMatrix();
-        Map<String, Object> confusionMap = Map.of(
-                "TP", (int) confusionMatrix[0][0],
-                "TN", (int) confusionMatrix[1][1],
-                "FP", (int) confusionMatrix[1][0],
-                "FN", (int) confusionMatrix[0][1]
-        );
+        Map<String, Object> confusionMap = extractConfusionMatrix(confusionMatrix);
         return Map.of(
                 "accuracy", accuracy,
                 "precision", precision,
@@ -145,6 +140,29 @@ public class ModelEvaluationEngine {
                         "incorrectPredictions", (int) evaluation.incorrect()
                 )
         );
+    }
+
+    /**
+     * Safely extracts confusion matrix values, handling cases with single class or variable dimensions.
+     *
+     * @param confusionMatrix The Weka confusion matrix
+     * @return Map containing TP, TN, FP, FN values
+     */
+    private Map<String, Object> extractConfusionMatrix(double[][] confusionMatrix) {
+        int rows = confusionMatrix.length;
+        int cols = rows > 0 ? confusionMatrix[0].length : 0;
+        if (rows == 0 || cols == 0) {
+            return Map.of("TP", 0, "TN", 0, "FP", 0, "FN", 0);
+        }
+        if (rows == 1 && cols == 1) {
+            int tp = (int) confusionMatrix[0][0];
+            return Map.of("TP", tp, "TN", 0, "FP", 0, "FN", 0);
+        }
+        int tp = (int) confusionMatrix[0][0];
+        int tn = rows > 1 && cols > 1 ? (int) confusionMatrix[1][1] : 0;
+        int fp = rows > 1 ? (int) confusionMatrix[1][0] : 0;
+        int fn = cols > 1 ? (int) confusionMatrix[0][1] : 0;
+        return Map.of("TP", tp, "TN", tn, "FP", fp, "FN", fn);
     }
 
     /**

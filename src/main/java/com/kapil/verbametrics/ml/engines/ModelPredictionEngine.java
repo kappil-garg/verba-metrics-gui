@@ -194,14 +194,14 @@ public class ModelPredictionEngine {
         if (distribution == null || distribution.length == 0) {
             return new double[0];
         }
-        double sum = java.util.Arrays.stream(distribution).sum();
+        double sum = Arrays.stream(distribution).sum();
         // If sum is 0 or very close to 0, return uniform distribution
         if (sum < 1e-10) {
             double uniform = 1.0 / distribution.length;
-            return java.util.Arrays.stream(distribution).map(x -> uniform).toArray();
+            return Arrays.stream(distribution).map(x -> uniform).toArray();
         }
         // Normalize to sum to 1.0
-        double[] normalized = java.util.Arrays.stream(distribution)
+        double[] normalized = Arrays.stream(distribution)
                 .map(prob -> prob / sum)
                 .toArray();
         // Apply Laplace smoothing to prevent extreme probabilities
@@ -260,7 +260,7 @@ public class ModelPredictionEngine {
             probabilities[i] = Math.max(0.01, probabilities[i] + variation);
         }
         // Renormalize to ensure sum = 1.0
-        double sum = java.util.Arrays.stream(probabilities).sum();
+        double sum = Arrays.stream(probabilities).sum();
         for (int i = 0; i < probabilities.length; i++) {
             probabilities[i] = probabilities[i] / sum;
         }

@@ -1,0 +1,10 @@
+{
+  "samples": [
+    {"text":"Incredibly satisfied with the outstanding quality delivered.","features":[0.86,0.05,0.09]},
+    {"text":"Perfect solution that addresses all our needs effectively.","features":[0.84,0.06,0.10]},
+    {"text":"The service works acceptably for routine operations.","features":[0.43,0.28,0.29]},
+    {"text":"Standard functionality provides expected results consistently.","features":[0.41,0.29,0.30]},
+    {"text":"Completely broken product that fails basic functionality tests.","features":[0.05,0.91,0.04]},
+    {"text":"Severely disappointed by the lack of promised features.","features":[0.07,0.89,0.04]}
+  ]
+}

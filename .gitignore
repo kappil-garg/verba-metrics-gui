@@ -95,3 +95,4 @@ dist/
 
 # Dependency directories
 /node_modules/
+/models

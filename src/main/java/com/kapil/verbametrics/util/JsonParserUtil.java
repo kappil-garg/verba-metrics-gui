@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,8 +32,78 @@ public class JsonParserUtil {
      */
     public static List<Map<String, Object>> parseTrainingData(String trainingDataJson) {
         try {
-            return OBJECT_MAPPER.readValue(trainingDataJson, new TypeReference<>() {
-            });
+            String json = trainingDataJson == null ? "" : trainingDataJson
+                    .replace("\uFEFF", "")
+                    .replace("\u200B", "")
+                    .replace("\u200C", "")
+                    .replace("\u200D", "")
+                    .trim();
+            if (json.isEmpty()) {
+                throw new IllegalArgumentException("Training data is empty");
+            }
+            String[] lines = json.split("\r?\n");
+            boolean looksLikeJsonl = false;
+            int nonEmptyLineCount = 0;
+            for (String line : lines) {
+                String trimmed = line
+                        .replace("\uFEFF", "")
+                        .replace("\u200B", "")
+                        .replace("\u200C", "")
+                        .replace("\u200D", "")
+                        .trim();
+                if (!trimmed.isEmpty()) {
+                    nonEmptyLineCount++;
+                    looksLikeJsonl = trimmed.startsWith("{") && trimmed.endsWith("}");
+                    if (!looksLikeJsonl) {
+                        break;
+                    }
+                }
+            }
+            if (looksLikeJsonl && nonEmptyLineCount >= 2) {
+                ArrayList<Map<String, Object>> list = new ArrayList<>();
+                for (String line : lines) {
+                    String trimmed = line
+                            .replace("\uFEFF", "")
+                            .replace("\u200B", "")
+                            .replace("\u200C", "")
+                            .replace("\u200D", "")
+                            .trim();
+                    if (trimmed.isEmpty()) {
+                        continue;
+                    }
+                    Map<String, Object> obj = OBJECT_MAPPER.readValue(trimmed, new TypeReference<>() {
+                    });
+                    list.add(obj);
+                }
+                if (!list.isEmpty()) {
+                    return list;
+                }
+            }
+            if (json.startsWith("[") && json.endsWith("]")) {
+                String normalized = json
+                        .replaceAll("}\\s*\\n+\\s*\\{", "},{")
+                        .replaceAll("}\\s*\\r\\n+\\s*\\{", "},{")
+                        .replaceAll("}\\s*\\r+\\s*\\{", "},{")
+                        .replaceAll("}\\s+\\{", "},{")
+                        .replaceAll(",\\s*]", "]")
+                        .replaceAll("\\[\\s*,", "[");
+                return OBJECT_MAPPER.readValue(normalized, new TypeReference<>() {
+                });
+            }
+            if (json.startsWith("{") && json.endsWith("}")) {
+                Map<String, Object> single = OBJECT_MAPPER.readValue(json, new TypeReference<>() {
+                });
+                return List.of(single);
+            }
+            String joined = json
+                    .replaceAll("}\\n+\\s*\\{", "},{")
+                    .replaceAll("}\\r+\\s*\\{", "},{");
+            if (!joined.equals(json)) {
+                String asArray = "[" + joined + "]";
+                return OBJECT_MAPPER.readValue(asArray, new TypeReference<>() {
+                });
+            }
+            throw new IllegalArgumentException("Training data must be a JSON array, object, or JSONL (one JSON object per line)");
         } catch (Exception e) {
             LOGGER.error("Failed to parse training data JSON", e);
             throw new RuntimeException("Failed to parse training data: " + e.getMessage(), e);
