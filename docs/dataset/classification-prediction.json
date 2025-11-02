@@ -1,0 +1,10 @@
+{
+  "samples": [
+    {"text":"Transformer models outperform traditional approaches in benchmarks.","features":[0.81,0.06,0.13]},
+    {"text":"Climate research demonstrates temperature trends over decades.","features":[0.79,0.08,0.13]},
+    {"text":"Breaking news: Trade negotiations reach important milestone.","features":[0.25,0.65,0.10]},
+    {"text":"Municipal government releases quarterly financial statements.","features":[0.24,0.66,0.10]},
+    {"text":"Quarterback throws winning touchdown in championship game.","features":[0.13,0.19,0.68]},
+    {"text":"Soccer match ends with penalty shootout victory.","features":[0.14,0.18,0.68]}
+  ]
+}

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.kapil"
-version = "1.0.0"
+version = "1.1.0"
 description = "Verba Metrics GUI"
 
 java {
@@ -19,18 +19,8 @@ repositories {
     mavenCentral()
 }
 
-val apachePoiVersion = "5.4.0"
-val commonsIoVersion = "2.17.0"
-val commonsLang3Version = "3.18.0"
-val commonsCompressVersion = "1.27.1"
-
 // ML/DS Dependencies Versions
 val wekaVersion = "3.8.6"
-val smileVersion = "3.0.1"
-val dl4jVersion = "1.0.0-M2"
-val nd4jVersion = "1.0.0-M2"
-val opennlpVersion = "2.3.0"
-val jfreechartVersion = "1.5.3"
 val apacheCommonsMathVersion = "3.6.1"
 
 configurations.compileOnly {
@@ -47,21 +37,10 @@ dependencies {
     implementation("com.h2database:h2")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
-    implementation("org.apache.poi:poi:$apachePoiVersion")
-    implementation("org.apache.poi:poi-ooxml:$apachePoiVersion")
-
     implementation("org.projectlombok:lombok:1.18.32")
-    implementation("commons-io:commons-io:$commonsIoVersion")
-    implementation("org.apache.commons:commons-lang3:$commonsLang3Version")
-    implementation("org.apache.commons:commons-compress:$commonsCompressVersion")
 
     // Machine Learning and Data Science Dependencies
-    implementation("org.jfree:jfreechart:$jfreechartVersion")
-    implementation("org.nd4j:nd4j-native-platform:$nd4jVersion")
-    implementation("com.github.haifengl:smile-core:$smileVersion")
     implementation("nz.ac.waikato.cms.weka:weka-stable:$wekaVersion")
-    implementation("org.apache.opennlp:opennlp-tools:$opennlpVersion")
-    implementation("org.deeplearning4j:deeplearning4j-core:$dl4jVersion")
     implementation("org.apache.commons:commons-math3:$apacheCommonsMathVersion")
 
     implementation("org.slf4j:slf4j-api")

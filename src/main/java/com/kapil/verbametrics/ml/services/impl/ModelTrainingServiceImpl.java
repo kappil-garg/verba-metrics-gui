@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Implementation of model training service.
@@ -38,8 +39,9 @@ public class ModelTrainingServiceImpl implements ModelTrainingService {
         Objects.requireNonNull(parameters, "Parameters cannot be null");
         LOGGER.debug("Starting model training for type: {} with {} data points", modelType, trainingData.size());
         try {
-            if (!validateTrainingData(trainingData, modelType)) {
-                throw new IllegalArgumentException("Invalid training data for model type: " + modelType);
+            Optional<String> validationError = trainingEngine.validateTrainingDataError(trainingData, modelType);
+            if (validationError.isPresent()) {
+                throw new IllegalArgumentException(validationError.get());
             }
             String modelId = "model_" + System.currentTimeMillis();
             return trainingEngine.trainModel(modelId, modelType, trainingData, parameters);
@@ -51,7 +53,8 @@ public class ModelTrainingServiceImpl implements ModelTrainingService {
 
     @Override
     public boolean validateTrainingData(List<Map<String, Object>> trainingData, String modelType) {
-        return trainingEngine.validateTrainingData(trainingData, modelType);
+        // Call validateTrainingDataError directly to avoid unnecessary wrapper method call
+        return trainingEngine.validateTrainingDataError(trainingData, modelType).isEmpty();
     }
 
     @Override

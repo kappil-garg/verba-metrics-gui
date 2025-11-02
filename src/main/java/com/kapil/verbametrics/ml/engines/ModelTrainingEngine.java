@@ -114,23 +114,137 @@ public class ModelTrainingEngine {
     }
 
     /**
-     * Validates the training data and model type.
+     * Validates the training data for the specified model type to ensure it meets requirements.
      *
      * @param trainingData The training data as a list of maps
      * @param modelType    The type of model to train
-     * @return True if the training data and model type are valid, false otherwise
+     * @return An optional error message if validation fails (empty if valid)
      */
-    public boolean validateTrainingData(List<Map<String, Object>> trainingData, String modelType) {
+    public Optional<String> validateTrainingDataError(List<Map<String, Object>> trainingData, String modelType) {
+        // Normalize model type once and orchestrate granular checks
+        String normalizedType = modelType == null ? "" : modelType.toUpperCase();
+        Optional<String> err = checkPreflight(trainingData, normalizedType);
+        if (err.isPresent()) {
+            return err;
+        }
+        List<String> required = modelTypeClassifier.getRequiredFields(normalizedType);
+        // Determine if this is a classification-like model that needs label/feature validation
+        boolean isClassificationModel = VerbaMetricsConstants.K_CLASSIFICATION.equals(normalizedType)
+                || VerbaMetricsConstants.K_SENTIMENT.equals(normalizedType);
+        // Validate data records: for classification models, check required fields, labels, and features in one pass
+        if (isClassificationModel) {
+            return validateClassificationData(trainingData, required);
+        }
+        // For non-classification models, only check required fields if any
+        if (!required.isEmpty()) {
+            return checkRequiredFields(trainingData, required);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Basic preflight checks that validate dataset presence/size and model type validity.
+     *
+     * @param trainingData   The training dataset
+     * @param normalizedType The normalized model type
+     * @return An optional error message if preflight checks fail
+     */
+    private Optional<String> checkPreflight(List<Map<String, Object>> trainingData, String normalizedType) {
         if (trainingData == null || trainingData.isEmpty()) {
-            LOGGER.warn("Training data is null or empty");
-            return false;
+            return Optional.of("Training data is empty");
         }
         int minDataSize = properties.getTrainingLimits().getOrDefault("min-data-size", 10);
         if (trainingData.size() < minDataSize) {
-            LOGGER.warn("Training data size too small: {}", trainingData.size());
-            return false;
+            return Optional.of("Need at least " + minDataSize + " records, got " + trainingData.size());
         }
-        return modelTypeClassifier.isValidModelType(modelType);
+        if (!modelTypeClassifier.isValidModelType(normalizedType)) {
+            return Optional.of("Unsupported model type: " + normalizedType + ". Supported: "
+                    + String.join(", ", getSupportedModelTypes()));
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Checks for required fields in the training data.
+     *
+     * @param trainingData The training dataset
+     * @param required     The list of required fields (non-empty)
+     * @return An optional error message if required fields are missing
+     */
+    private Optional<String> checkRequiredFields(List<Map<String, Object>> trainingData, List<String> required) {
+        for (int i = 0; i < trainingData.size(); i++) {
+            Map<String, Object> record = trainingData.get(i);
+            for (String field : required) {
+                Object value = record.get(field);
+                if (value == null || (value instanceof String s && s.isBlank())) {
+                    return Optional.of("Record #" + (i + 1) + " missing required field '" + field + "'");
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Validates classification model data (required fields, labels, and features) in a single pass.
+     *
+     * @param trainingData The training dataset
+     * @param required     The list of required fields (maybe empty)
+     * @return An optional error message if validation fails
+     */
+    private Optional<String> validateClassificationData(List<Map<String, Object>> trainingData, List<String> required) {
+        Set<String> classes = new LinkedHashSet<>();
+        int expectedFeatureLength = -1;
+        for (int i = 0; i < trainingData.size(); i++) {
+            Map<String, Object> record = trainingData.get(i);
+            int recordNum = i + 1;
+            if (!required.isEmpty()) {
+                for (String field : required) {
+                    Object value = record.get(field);
+                    if (value == null || (value instanceof String s && s.isBlank())) {
+                        return Optional.of("Record #" + recordNum + " missing required field '" + field + "'");
+                    }
+                }
+            }
+            Object label = record.get("label");
+            if (label == null) {
+                return Optional.of("Record #" + recordNum + " missing label value");
+            }
+            if (label instanceof String labelStr && !labelStr.isBlank()) {
+                classes.add(labelStr);
+            } else {
+                return Optional.of("Record #" + recordNum + " has invalid label value");
+            }
+            Object features = record.get("features");
+            if (features == null) {
+                return Optional.of("Record #" + recordNum + " missing features");
+            }
+            int featureLength = switch (features) {
+                case double[] arr -> arr.length;
+                case List<?> list -> {
+                    boolean allNumbers = list.stream().allMatch(o -> o instanceof Number);
+                    yield allNumbers ? list.size() : -1;
+                }
+                default -> -1;
+            };
+            if (featureLength == -1) {
+                return Optional.of("Record #" + recordNum + " features must be an array of numbers");
+            }
+            // Check feature length consistency
+            if (expectedFeatureLength == -1) {
+                expectedFeatureLength = featureLength;
+            } else if (featureLength != expectedFeatureLength) {
+                return Optional.of("All feature vectors must be of the same length: expected " + expectedFeatureLength
+                        + "elements, but record #" + recordNum + " has " + featureLength + " elements");
+            }
+        }
+        // Validate class distribution
+        if (classes.isEmpty()) {
+            return Optional.of("No valid label values found in training data");
+        }
+        if (classes.size() == 1) {
+            return Optional.of("At least 2 distinct label classes required; found " + classes);
+        }
+        return Optional.empty();
     }
 
     /**
@@ -151,7 +265,7 @@ public class ModelTrainingEngine {
     public Map<String, Object> getDefaultParameters(String modelType) {
         Object defaultParams = properties.getDefaultParameters().get(modelType);
         if (defaultParams instanceof Map<?, ?> map) {
-            Map<String, Object> params = new java.util.HashMap<>();
+            Map<String, Object> params = new HashMap<>();
             for (Map.Entry<?, ?> entry : map.entrySet()) {
                 if (entry.getKey() instanceof String) {
                     params.put((String) entry.getKey(), entry.getValue());
@@ -325,7 +439,7 @@ public class ModelTrainingEngine {
                 // Remove text attribute (index 0) as RandomTree works only with numeric features
                 numericDataset.deleteAttributeAt(0);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
-                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
+                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new Random(1));
                 return evaluation.pctCorrect() / 100.0;
             } catch (Exception e) {
                 LOGGER.warn("Failed to calculate model accuracy with cross-validation", e);
@@ -352,8 +466,9 @@ public class ModelTrainingEngine {
                 // Remove text attribute (index 0) as RandomTree works only with numeric features
                 numericDataset.deleteAttributeAt(0);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
-                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
-                return evaluation.precision(0);
+                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new Random(1));
+                // Use weighted precision (across classes) rather than precision for class index 0
+                return evaluation.weightedPrecision();
             } catch (Exception e) {
                 LOGGER.warn("Failed to calculate precision", e);
                 Double fallbackPrecision = properties.getPerformanceThresholds().get("min-precision");
@@ -379,8 +494,9 @@ public class ModelTrainingEngine {
                 // Remove text attribute (index 0) as RandomTree works only with numeric features
                 numericDataset.deleteAttributeAt(0);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
-                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new java.util.Random(1));
-                return evaluation.recall(0);
+                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new Random(1));
+                // Use weighted recall (across classes) rather than recall for class index 0
+                return evaluation.weightedRecall();
             } catch (Exception e) {
                 LOGGER.warn("Failed to calculate recall", e);
                 Double fallbackRecall = properties.getPerformanceThresholds().get("min-recall");
