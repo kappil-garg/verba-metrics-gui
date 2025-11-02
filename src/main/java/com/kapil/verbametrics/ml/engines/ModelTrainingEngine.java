@@ -221,12 +221,8 @@ public class ModelTrainingEngine {
             int featureLength = switch (features) {
                 case double[] arr -> arr.length;
                 case List<?> list -> {
-                    for (Object o : list) {
-                        if (!(o instanceof Number)) {
-                            yield -1;
-                        }
-                    }
-                    yield list.size();
+                    boolean allNumbers = list.stream().allMatch(o -> o instanceof Number);
+                    yield allNumbers ? list.size() : -1;
                 }
                 default -> -1;
             };
@@ -237,8 +233,8 @@ public class ModelTrainingEngine {
             if (expectedFeatureLength == -1) {
                 expectedFeatureLength = featureLength;
             } else if (featureLength != expectedFeatureLength) {
-                return Optional.of("Inconsistent feature vector length: expected " + expectedFeatureLength
-                        + ", got " + featureLength + " at record #" + recordNum);
+                return Optional.of("All feature vectors must be of the same length: expected " + expectedFeatureLength
+                        + "elements, but record #" + recordNum + " has " + featureLength + " elements");
             }
         }
         // Validate class distribution

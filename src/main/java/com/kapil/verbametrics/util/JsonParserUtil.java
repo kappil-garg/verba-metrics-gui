@@ -32,12 +32,7 @@ public class JsonParserUtil {
      */
     public static List<Map<String, Object>> parseTrainingData(String trainingDataJson) {
         try {
-            String json = trainingDataJson == null ? "" : trainingDataJson
-                    .replace("\uFEFF", "")
-                    .replace("\u200B", "")
-                    .replace("\u200C", "")
-                    .replace("\u200D", "")
-                    .trim();
+            String json = cleanJsonString(trainingDataJson);
             if (json.isEmpty()) {
                 throw new IllegalArgumentException("Training data is empty");
             }
@@ -45,16 +40,15 @@ public class JsonParserUtil {
             boolean looksLikeJsonl = false;
             int nonEmptyLineCount = 0;
             for (String line : lines) {
-                String trimmed = line
-                        .replace("\uFEFF", "")
-                        .replace("\u200B", "")
-                        .replace("\u200C", "")
-                        .replace("\u200D", "")
-                        .trim();
+                String trimmed = cleanJsonString(line);
                 if (!trimmed.isEmpty()) {
                     nonEmptyLineCount++;
-                    looksLikeJsonl = trimmed.startsWith("{") && trimmed.endsWith("}");
-                    if (!looksLikeJsonl) {
+                    try {
+                        // Try to parse the line as a JSON object to validate
+                        OBJECT_MAPPER.readTree(trimmed);
+                        looksLikeJsonl = trimmed.startsWith("{") && trimmed.endsWith("}");
+                    } catch (Exception e) {
+                        looksLikeJsonl = false;
                         break;
                     }
                 }
@@ -62,12 +56,7 @@ public class JsonParserUtil {
             if (looksLikeJsonl && nonEmptyLineCount >= 2) {
                 ArrayList<Map<String, Object>> list = new ArrayList<>();
                 for (String line : lines) {
-                    String trimmed = line
-                            .replace("\uFEFF", "")
-                            .replace("\u200B", "")
-                            .replace("\u200C", "")
-                            .replace("\u200D", "")
-                            .trim();
+                    String trimmed = cleanJsonString(line);
                     if (trimmed.isEmpty()) {
                         continue;
                     }
@@ -81,10 +70,7 @@ public class JsonParserUtil {
             }
             if (json.startsWith("[") && json.endsWith("]")) {
                 String normalized = json
-                        .replaceAll("}\\s*\\n+\\s*\\{", "},{")
-                        .replaceAll("}\\s*\\r\\n+\\s*\\{", "},{")
-                        .replaceAll("}\\s*\\r+\\s*\\{", "},{")
-                        .replaceAll("}\\s+\\{", "},{")
+                        .replaceAll("}\\s*[\\r\\n]+\\s*\\{", "},{")
                         .replaceAll(",\\s*]", "]")
                         .replaceAll("\\[\\s*,", "[");
                 return OBJECT_MAPPER.readValue(normalized, new TypeReference<>() {
@@ -108,6 +94,25 @@ public class JsonParserUtil {
             LOGGER.error("Failed to parse training data JSON", e);
             throw new RuntimeException("Failed to parse training data: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Cleans a JSON string by removing Unicode characters that can cause parsing issues.
+     * Removes BOM (Byte Order Mark), zero-width spaces, and other invisible Unicode characters.
+     *
+     * @param input the input string to clean
+     * @return the cleaned and trimmed string
+     */
+    private static String cleanJsonString(String input) {
+        if (input == null) {
+            return "";
+        }
+        return input
+                .replace("\uFEFF", "")
+                .replace("\u200B", "")
+                .replace("\u200C", "")
+                .replace("\u200D", "")
+                .trim();
     }
 
     /**
