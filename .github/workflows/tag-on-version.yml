@@ -1,0 +1,49 @@
+name: Create tag on version change
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'gradle.properties'
+      - 'build.gradle'
+      - 'build.gradle.kts'
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version from gradle.properties
+        id: ver
+        run: |
+          VER="$(grep -E '^version=' gradle.properties | sed 's/version=//')"
+          if [ -z "$VER" ]; then echo "Version not found" && exit 1; fi
+          echo "version=$VER" >> $GITHUB_OUTPUT
+
+      - name: Build tag name
+        id: tag
+        run: |
+          echo "tag=v${{ steps.ver.outputs.version }}" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: exists
+        run: |
+          if git rev-parse "${{ steps.tag.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create and push tag
+        if: steps.exists.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.tag.outputs.tag }}" -m "Release ${{ steps.ver.outputs.version }}"
+          git push origin "${{ steps.tag.outputs.tag }}"

@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "com.kapil"
-version = "1.1.0"
+version = providers.gradleProperty("version").get()
 description = "Verba Metrics GUI"
 
 java {
