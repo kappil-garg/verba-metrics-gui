@@ -42,11 +42,13 @@ public class ModelFileManager {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(model, "Model cannot be null");
         try {
-            String basePath = properties.getFileSettings().getOrDefault("base-path", "/models");
-            String fileName = modelId + ".ser";
-            Path filePath = Paths.get(basePath, fileName);
-            Files.createDirectories(filePath.getParent());
-            try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(filePath))) {
+            String filePath = getModelFilePath(modelId);
+            Path path = Paths.get(filePath);
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            try (ObjectOutputStream oos = new ObjectOutputStream(Files.newOutputStream(path))) {
                 oos.writeObject(model);
             }
         } catch (IOException e) {
@@ -89,9 +91,18 @@ public class ModelFileManager {
     public String getModelFilePath(String modelId) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         String basePath = properties.getFileSettings().getOrDefault("base-path", "/models");
-        String format = properties.getFileSettings().getOrDefault("format", "json");
+        String format = properties.getFileSettings().getOrDefault("format", "ser");
         String fileName = modelId + "." + format;
         return Paths.get(basePath, fileName).toString();
+    }
+
+    /**
+     * Gets the base path for model files.
+     *
+     * @return the base path
+     */
+    public String getBasePath() {
+        return properties.getFileSettings().getOrDefault("base-path", "/models");
     }
 
 }

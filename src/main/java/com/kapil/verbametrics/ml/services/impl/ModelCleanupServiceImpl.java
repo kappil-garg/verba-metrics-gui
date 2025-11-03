@@ -121,8 +121,8 @@ public class ModelCleanupServiceImpl implements ModelCleanupService, Application
                 .map(MLModel::modelId)
                 .toList();
         Set<String> dbModelIdSet = Set.copyOf(dbModelIds);
-        // Get all .ser files in models directory
-        String basePath = fileManager.getModelFilePath("").replaceAll("/[^/]*$", ""); // Get base directory
+        // Get all model files in models directory
+        String basePath = fileManager.getBasePath();
         Path baseDir = Paths.get(basePath);
         if (!Files.exists(baseDir)) {
             LOGGER.debug("Models directory does not exist, nothing to clean up");
@@ -133,9 +133,12 @@ public class ModelCleanupServiceImpl implements ModelCleanupService, Application
             for (Path filePath : stream.toList()) {
                 if (Files.isRegularFile(filePath) && filePath.toString().endsWith(".ser")) {
                     String fileName = filePath.getFileName().toString();
-                    String modelId = fileName.substring(0, fileName.lastIndexOf('.'));
-                    if (!dbModelIdSet.contains(modelId)) {
-                        orphanedFiles.add(filePath);
+                    int lastDot = fileName.lastIndexOf('.');
+                    if (lastDot > 0) {
+                        String modelId = fileName.substring(0, lastDot);
+                        if (!dbModelIdSet.contains(modelId)) {
+                            orphanedFiles.add(filePath);
+                        }
                     }
                 }
             }

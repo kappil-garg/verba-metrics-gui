@@ -1,9 +1,8 @@
 package com.kapil.verbametrics.ml.engines;
 
+import com.kapil.verbametrics.ml.config.ClassValueManager;
 import com.kapil.verbametrics.ml.domain.ModelEvaluationResult;
 import com.kapil.verbametrics.ml.managers.ModelFileManager;
-import com.kapil.verbametrics.ml.utils.MetricsCalculationUtils;
-import com.kapil.verbametrics.ml.utils.WekaDatasetUtils;
 import com.kapil.verbametrics.util.TypeSafeCastUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +12,7 @@ import weka.classifiers.Classifier;
 import weka.core.Instances;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,10 +29,12 @@ public class ModelEvaluationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelEvaluationEngine.class);
 
     private final ModelFileManager fileManager;
+    private final ClassValueManager classValueManager;
 
     @Autowired
-    public ModelEvaluationEngine(ModelFileManager fileManager) {
+    public ModelEvaluationEngine(ModelFileManager fileManager, ClassValueManager classValueManager) {
         this.fileManager = fileManager;
+        this.classValueManager = classValueManager;
     }
 
     /**
@@ -71,7 +73,7 @@ public class ModelEvaluationEngine {
         if (!(model instanceof Classifier)) {
             throw new IllegalArgumentException("Loaded model is not a Weka Classifier: " + model.getClass().getSimpleName());
         }
-        Map<String, Object> evaluationMetrics = performModelEvaluation(model, testData);
+        Map<String, Object> evaluationMetrics = performModelEvaluation(model, testData, modelId);
         long evaluationTime = System.currentTimeMillis() - startTime;
         LOGGER.info("Model evaluation completed in {}ms for model: {}", evaluationTime, modelId);
         return new ModelEvaluationResult(
@@ -100,9 +102,9 @@ public class ModelEvaluationEngine {
      * @return Evaluation metrics
      * @throws Exception if evaluation fails
      */
-    private Map<String, Object> performModelEvaluation(Object model, List<Map<String, Object>> testData) throws Exception {
+    private Map<String, Object> performModelEvaluation(Object model, List<Map<String, Object>> testData, String modelId) throws Exception {
         if (model instanceof Classifier) {
-            return evaluateWekaModel((Classifier) model, testData);
+            return evaluateWekaModel((Classifier) model, testData, modelId);
         } else {
             throw new IllegalArgumentException("Unsupported model type: " + model.getClass().getSimpleName());
         }
@@ -116,15 +118,15 @@ public class ModelEvaluationEngine {
      * @return Evaluation metrics
      * @throws Exception if evaluation fails
      */
-    private Map<String, Object> evaluateWekaModel(Classifier model, List<Map<String, Object>> testData) throws Exception {
-        Instances testDataset = createWekaDataset(testData);
+    private Map<String, Object> evaluateWekaModel(Classifier model, List<Map<String, Object>> testData, String modelId) throws Exception {
+        Instances testDataset = createAlignedEvaluationDataset(testData, modelId);
         weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(testDataset);
         evaluation.evaluateModel(model, testDataset);
         double accuracy = evaluation.pctCorrect() / 100.0;
-        double precision = evaluation.precision(0);
-        double recall = evaluation.recall(0);
-        double f1Score = MetricsCalculationUtils.calculateF1Score(precision, recall);
-        double auc = evaluation.areaUnderROC(0);
+        double precision = evaluation.weightedPrecision();
+        double recall = evaluation.weightedRecall();
+        double f1Score = evaluation.weightedFMeasure();
+        double auc = evaluation.weightedAreaUnderROC();
         double[][] confusionMatrix = evaluation.confusionMatrix();
         Map<String, Object> confusionMap = extractConfusionMatrix(confusionMatrix);
         return Map.of(
@@ -166,13 +168,58 @@ public class ModelEvaluationEngine {
     }
 
     /**
-     * Creates a Weka dataset from test data.
+     * Creates an aligned evaluation dataset compatible with the trained model.
      *
      * @param testData The test dataset
-     * @return Weka Instances object
+     * @param modelId  The ID of the trained model
+     * @return Aligned Weka Instances dataset
      */
-    private Instances createWekaDataset(List<Map<String, Object>> testData) {
-        return WekaDatasetUtils.createDataset(testData, "TestDataset");
+    private Instances createAlignedEvaluationDataset(List<Map<String, Object>> testData, String modelId) {
+        ArrayList<weka.core.Attribute> attributes = new ArrayList<>();
+        int featureCount = 0;
+        Map<String, Object> sample = testData.getFirst();
+        Object feats = sample.get("features");
+        if (feats instanceof double[] arr) {
+            featureCount = arr.length;
+            for (int i = 0; i < featureCount; i++) attributes.add(new weka.core.Attribute("feature_" + i));
+        } else if (feats instanceof List<?> list) {
+            featureCount = list.size();
+            for (int i = 0; i < featureCount; i++) attributes.add(new weka.core.Attribute("feature_" + i));
+        }
+        List<String> classValues = classValueManager.getClassValues(modelId);
+        if (classValues.isEmpty()) {
+            // Fallback to common sentiment ordering if none stored
+            classValues = List.of("negative", "neutral", "positive");
+        }
+        attributes.add(new weka.core.Attribute("label", new ArrayList<>(classValues)));
+        weka.core.Instances dataset = new weka.core.Instances("EvaluationDataset", attributes, testData.size());
+        dataset.setClassIndex(attributes.size() - 1);
+        for (Map<String, Object> dp : testData) {
+            weka.core.DenseInstance instance = new weka.core.DenseInstance(attributes.size());
+            instance.setDataset(dataset);
+            Object f = dp.get("features");
+            if (f instanceof double[] arr2) {
+                for (int i = 0; i < featureCount; i++) instance.setValue(i, i < arr2.length ? arr2[i] : 0.0);
+            } else if (f instanceof List<?> l2) {
+                for (int i = 0; i < featureCount; i++) {
+                    Object v = i < l2.size() ? l2.get(i) : 0.0;
+                    instance.setValue(i, v instanceof Number ? ((Number) v).doubleValue() : 0.0);
+                }
+            }
+            Object lbl = dp.get("label");
+            if (lbl != null) {
+                String s = lbl.toString();
+                if (dataset.classAttribute().indexOfValue(s) >= 0) {
+                    instance.setValue(featureCount, s);
+                } else {
+                    instance.setMissing(featureCount);
+                }
+            } else {
+                instance.setMissing(featureCount);
+            }
+            dataset.add(instance);
+        }
+        return dataset;
     }
 
     /**

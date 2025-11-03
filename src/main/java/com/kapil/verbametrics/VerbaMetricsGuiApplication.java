@@ -1,6 +1,5 @@
 package com.kapil.verbametrics;
 
-import com.kapil.verbametrics.ml.services.ModelCleanupService;
 import com.kapil.verbametrics.ui.MainWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,18 +18,6 @@ public class VerbaMetricsGuiApplication {
         ConfigurableApplicationContext context = new SpringApplicationBuilder(VerbaMetricsGuiApplication.class)
                 .headless(false)
                 .run(args);
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                LOGGER.info("Application shutdown detected, cleaning up model files...");
-                ModelCleanupService cleanupService = context.getBean(ModelCleanupService.class);
-                cleanupService.cleanupOrphanedModelFiles();
-                LOGGER.info("Model cleanup completed");
-            } catch (Exception e) {
-                LOGGER.error("Error during model cleanup on shutdown", e);
-            } finally {
-                context.close();
-            }
-        }));
         SwingUtilities.invokeLater(() -> {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
