@@ -24,6 +24,9 @@ public class ModelTrainingEngine {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ModelTrainingEngine.class);
 
+    private static final int CROSS_VALIDATION_SEED = 1;
+    private static final int CROSS_VALIDATION_FOLDS = 5;
+
     private final MLModelProperties properties;
     private final ModelFileManager fileManager;
     private final ModelTypeClassifier modelTypeClassifier;
@@ -425,6 +428,21 @@ public class ModelTrainingEngine {
     }
 
     /**
+     * Prepares a numeric dataset from training data by removing the text attribute.
+     * This is used for cross-validation as RandomTree works only with numeric features.
+     *
+     * @param trainingData The training dataset
+     * @return Numeric Instances object ready for cross-validation
+     */
+    private Instances prepareNumericDataset(List<Map<String, Object>> trainingData) {
+        Instances dataset = createWekaDataset(trainingData);
+        Instances numericDataset = new Instances(dataset);
+        // Remove text attribute (index 0) as RandomTree works only with numeric features
+        numericDataset.deleteAttributeAt(0);
+        return numericDataset;
+    }
+
+    /**
      * Calculates model accuracy using Weka's cross-validation.
      *
      * @param model        The trained model
@@ -434,12 +452,9 @@ public class ModelTrainingEngine {
     private double calculateModelAccuracy(Object model, List<Map<String, Object>> trainingData) {
         if (model instanceof Classifier) {
             try {
-                Instances dataset = createWekaDataset(trainingData);
-                Instances numericDataset = new Instances(dataset);
-                // Remove text attribute (index 0) as RandomTree works only with numeric features
-                numericDataset.deleteAttributeAt(0);
+                Instances numericDataset = prepareNumericDataset(trainingData);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
-                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new Random(1));
+                evaluation.crossValidateModel((Classifier) model, numericDataset, CROSS_VALIDATION_FOLDS, new Random(CROSS_VALIDATION_SEED));
                 return evaluation.pctCorrect() / 100.0;
             } catch (Exception e) {
                 LOGGER.warn("Failed to calculate model accuracy with cross-validation", e);
@@ -461,12 +476,9 @@ public class ModelTrainingEngine {
     private double calculatePrecision(Object model, List<Map<String, Object>> trainingData) {
         if (model instanceof Classifier) {
             try {
-                Instances dataset = createWekaDataset(trainingData);
-                Instances numericDataset = new Instances(dataset);
-                // Remove text attribute (index 0) as RandomTree works only with numeric features
-                numericDataset.deleteAttributeAt(0);
+                Instances numericDataset = prepareNumericDataset(trainingData);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
-                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new Random(1));
+                evaluation.crossValidateModel((Classifier) model, numericDataset, CROSS_VALIDATION_FOLDS, new Random(CROSS_VALIDATION_SEED));
                 // Use weighted precision (across classes) rather than precision for class index 0
                 return evaluation.weightedPrecision();
             } catch (Exception e) {
@@ -489,12 +501,9 @@ public class ModelTrainingEngine {
     private double calculateRecall(Object model, List<Map<String, Object>> trainingData) {
         if (model instanceof Classifier) {
             try {
-                Instances dataset = createWekaDataset(trainingData);
-                Instances numericDataset = new Instances(dataset);
-                // Remove text attribute (index 0) as RandomTree works only with numeric features
-                numericDataset.deleteAttributeAt(0);
+                Instances numericDataset = prepareNumericDataset(trainingData);
                 weka.classifiers.Evaluation evaluation = new weka.classifiers.Evaluation(numericDataset);
-                evaluation.crossValidateModel((Classifier) model, numericDataset, 5, new Random(1));
+                evaluation.crossValidateModel((Classifier) model, numericDataset, CROSS_VALIDATION_FOLDS, new Random(CROSS_VALIDATION_SEED));
                 // Use weighted recall (across classes) rather than recall for class index 0
                 return evaluation.weightedRecall();
             } catch (Exception e) {

@@ -39,7 +39,7 @@ public class ModelCacheManager {
     public void cacheModel(String modelId, MLModel model) {
         Objects.requireNonNull(modelId, "Model ID cannot be null");
         Objects.requireNonNull(model, "Model cannot be null");
-        int maxSize = properties.getCacheSettings().getOrDefault("max-size", 100);
+        int maxSize = properties.getCacheSettings().getOrDefault("max-models", 100);
         if (modelCache.size() >= maxSize) {
             evictOldestModel();
         }
@@ -115,7 +115,7 @@ public class ModelCacheManager {
     public Map<String, Object> getCacheStatistics() {
         Map<String, Object> stats = new HashMap<>();
         stats.put("cacheSize", modelCache.size());
-        stats.put("maxSize", properties.getCacheSettings().getOrDefault("max-size", 100));
+        stats.put("maxSize", properties.getCacheSettings().getOrDefault("max-models", 100));
         stats.put("cachedModels", new ArrayList<>(modelCache.keySet()));
         return stats;
     }

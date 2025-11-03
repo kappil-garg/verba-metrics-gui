@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class MLModelServiceImpl implements MLModelService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MLModelServiceImpl.class.getName());
+    private static final Logger LOGGER = LoggerFactory.getLogger(MLModelServiceImpl.class);
 
     private final MLModelMapper modelMapper;
     private final MLModelRepository modelRepository;

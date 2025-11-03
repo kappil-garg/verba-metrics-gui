@@ -124,7 +124,10 @@ public class JsonParserUtil {
      */
     public static List<Map<String, Object>> parsePredictionData(String predictionDataJson) {
         try {
-            String json = predictionDataJson.trim();
+            String json = cleanJsonString(predictionDataJson);
+            if (json.isEmpty()) {
+                throw new IllegalArgumentException("Prediction data is empty");
+            }
             if (json.startsWith("[") && json.endsWith("]")) {
                 // Handle JSON array format
                 return OBJECT_MAPPER.readValue(json, new TypeReference<>() {
