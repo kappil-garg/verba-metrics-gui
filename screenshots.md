@@ -2,7 +2,7 @@
 
 This document showcases the key features and workflows of Verba Metrics GUI through visual demonstrations and example results.
 
-**Test Environment:** Verba Metrics GUI v1.0.0 | Java 21 | Windows 10
+**Test Environment:** Verba Metrics GUI v1.1.1 | Java 21 | Windows 10/11
 
 ---
 
@@ -111,15 +111,18 @@ The following dataset was used for evaluating the trained model:
 
 ```json
 [
-  {"text":"Crashes during simple tasks; very unreliable.","features":[0.10,0.86,0.04],"label":"negative"},
-  {"text":"Frequent errors and slow response.","features":[0.12,0.83,0.05],"label":"negative"},
-  {"text":"Support is unhelpful and issues persist.","features":[0.13,0.82,0.05],"label":"negative"},
-  {"text":"Works as expected but not impressive.","features":[0.44,0.28,0.28],"label":"neutral"},
-  {"text":"Average quality; meets basic needs.","features":[0.42,0.30,0.28],"label":"neutral"},
-  {"text":"Usable product with room for improvement.","features":[0.45,0.27,0.28],"label":"neutral"},
-  {"text":"Excellent value and smooth performance.","features":[0.84,0.07,0.09],"label":"positive"},
-  {"text":"Delighted with the overall experience.","features":[0.83,0.07,0.10],"label":"positive"},
-  {"text":"Fast, reliable, and easy to recommend.","features":[0.85,0.06,0.09],"label":"positive"}
+  {"text":"Disappointing overall; too many hiccups.","features":[0.20,0.70,0.10],"label":"negative"},
+  {"text":"Frequent slowdowns, but sometimes okay.","features":[0.30,0.55,0.15],"label":"negative"},
+  {"text":"Crashes reduced, still not reliable.","features":[0.15,0.78,0.07], "label":"negative"},
+  {"text":"Mostly good, a few quirks.","features":[0.62,0.20,0.18],"label":"positive"},
+  {"text":"Smooth and enjoyable to use.","features":[0.68,0.15,0.17],"label":"positive"},
+  {"text":"Fine for day-to-day tasks.","features":[0.45,0.24,0.31],"label":"neutral"},
+  {"text":"Pretty decent but not amazing.","features":[0.52,0.22,0.26],"label":"neutral"},
+  {"text":"Usable with occasional stutters.","features":[0.38,0.45,0.17],"label":"neutral"},
+  {"text":"Good value with minor issues.","features":[0.50,0.18,0.32],"label":"positive"},
+  {"text":"Terrible choice; avoid this.","features":[0.72,0.10,0.18],"label":"negative"},
+  {"text":"Surprisingly pleasant to use.","features":[0.25,0.60,0.15],"label":"positive"},
+  {"text":"Average; nothing stands out.","features":[0.34,0.33,0.33],"label":"neutral"}
 ]
 ```
 
