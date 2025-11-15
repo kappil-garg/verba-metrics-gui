@@ -73,3 +73,12 @@ tasks.test {
 jacoco {
     toolVersion = "0.8.12"
 }
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}

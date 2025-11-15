@@ -3,6 +3,7 @@ package com.kapil.verbametrics.util;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,7 +98,6 @@ class TypeSafeCastUtilTest {
     @DisplayName("safeCastToMap handles complex objects as values")
     void safeCastToMap_complexValues() {
         class CustomObject {
-            final String field = "test";
         }
         CustomObject obj = new CustomObject();
         Map<String, Object> input = Map.of("key", obj);
@@ -150,7 +150,7 @@ class TypeSafeCastUtilTest {
     @DisplayName("Private constructor cannot be instantiated")
     void privateConstructor() throws Exception {
         var constructor = TypeSafeCastUtil.class.getDeclaredConstructor();
-        assertTrue(java.lang.reflect.Modifier.isPrivate(constructor.getModifiers()),
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()),
                 "Constructor should be private");
     }
 

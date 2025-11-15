@@ -47,6 +47,53 @@ class ModelEvaluationEngineTest {
     }
 
     @Test
+    @DisplayName("evaluateModel: throws when modelId is null")
+    void evaluate_nullModelId_throws() {
+        ModelFileManager fileManager = Mockito.mock(ModelFileManager.class);
+        ClassValueManager classValueManager = Mockito.mock(ClassValueManager.class);
+        ModelEvaluationEngine engine = new ModelEvaluationEngine(fileManager, classValueManager);
+        List<Map<String, Object>> testData = List.of(Map.of("features", List.of(0.1, 0.2)));
+        assertThrows(NullPointerException.class, () -> engine.evaluateModel(null, testData));
+    }
+
+    @Test
+    @DisplayName("evaluateModel: throws when testData is null")
+    void evaluate_nullTestData_throws() {
+        ModelFileManager fileManager = Mockito.mock(ModelFileManager.class);
+        ClassValueManager classValueManager = Mockito.mock(ClassValueManager.class);
+        ModelEvaluationEngine engine = new ModelEvaluationEngine(fileManager, classValueManager);
+        assertThrows(NullPointerException.class, () -> engine.evaluateModel("modelId", null));
+    }
+
+    @Test
+    @DisplayName("evaluateModel: returns failed result for empty testData")
+    void evaluate_emptyTestData_failed() {
+        ModelFileManager fileManager = Mockito.mock(ModelFileManager.class);
+        ClassValueManager classValueManager = Mockito.mock(ClassValueManager.class);
+        String modelId = "m3";
+        when(fileManager.loadModelFromFile(modelId)).thenReturn(Optional.of(new StubClassifier()));
+        ModelEvaluationEngine engine = new ModelEvaluationEngine(fileManager, classValueManager);
+        List<Map<String, Object>> testData = List.of();
+        ModelEvaluationResult result = engine.evaluateModel(modelId, testData);
+        assertFalse(result.success());
+        assertNotNull(result.errorMessage());
+    }
+
+    @Test
+    @DisplayName("evaluateModel: returns failed result for invalid model type")
+    void evaluate_invalidModelType_failed() {
+        ModelFileManager fileManager = Mockito.mock(ModelFileManager.class);
+        ClassValueManager classValueManager = Mockito.mock(ClassValueManager.class);
+        String modelId = "m4";
+        when(fileManager.loadModelFromFile(modelId)).thenReturn(Optional.of(new Object()));
+        ModelEvaluationEngine engine = new ModelEvaluationEngine(fileManager, classValueManager);
+        List<Map<String, Object>> testData = List.of(Map.of("features", List.of(0.1, 0.2)));
+        ModelEvaluationResult result = engine.evaluateModel(modelId, testData);
+        assertFalse(result.success());
+        assertTrue(result.errorMessage().contains("not a Weka Classifier"));
+    }
+
+    @Test
     @DisplayName("evaluateModel: failure when model file missing")
     void evaluate_missingModel() {
         ModelFileManager fileManager = Mockito.mock(ModelFileManager.class);

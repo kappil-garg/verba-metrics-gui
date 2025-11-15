@@ -17,6 +17,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 
@@ -155,7 +156,7 @@ public class TextAnalysisPanel extends JPanel {
         inputArea.getInputMap(JComponent.WHEN_FOCUSED).put(ctrlEnter, "analyze");
         inputArea.getActionMap().put("analyze", new AbstractAction() {
             @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
+            public void actionPerformed(ActionEvent e) {
                 onAnalyze();
             }
         });
